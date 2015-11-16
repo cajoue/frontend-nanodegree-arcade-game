@@ -15,6 +15,10 @@ var Enemy = function() {
 
     this.y = Math.floor(Math.random() * 3 + 1) * 83 - 21;
 
+    var minSpeed = 128;
+    var maxSpeed = 256;
+    this.speed = Math.floor(Math.random()*(maxSpeed - minSpeed + 1) + minSpeed);
+
     this.sprite = 'images/enemy-bug.png';
 };
 
@@ -24,6 +28,8 @@ Enemy.prototype.update = function(dt) {
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
+    // the new x position = old x + distance traveled in timeframe
+    this.x = this.x + this.speed * dt;
 };
 
 // Draw the enemy on the screen, required method for game
@@ -35,6 +41,7 @@ Enemy.prototype.render = function() {
 // This class requires an update(), render() and
 // a handleInput() method.
 var Player = function() {
+    // sprite height = 171
     // col widths = 101
     // randomise col between 0 and 4. Math.floor(Math.random()*(max-min+1)+min);
     this.x = Math.floor(Math.random() * 5 + 0) * 101;
