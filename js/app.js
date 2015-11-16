@@ -35,6 +35,10 @@ Enemy.prototype.render = function() {
 // This class requires an update(), render() and
 // a handleInput() method.
 var Player = function() {
+    // col widths = 101
+    // randomise col between 0 and 4. Math.floor(Math.random()*(max-min+1)+min);
+    this.x = Math.floor(Math.random() * 5 + 0) * 101;
+    this.y = 606 - 171;
     this.sprite = 'images/char-boy.png';
 };
 
