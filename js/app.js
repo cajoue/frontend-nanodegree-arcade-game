@@ -5,6 +5,16 @@ var Enemy = function() {
 
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
+
+    // all bugs enter from left
+    this.x = 0;
+
+    // randomise row between 1 and 3. Math.floor(Math.random()*(max-min+1)+min);
+    // stone row heights = 83 centre is 42
+    // offset y so that bug runs centrally 21 works...
+
+    this.y = Math.floor(Math.random() * 3 + 1) * 83 - 21;
+
     this.sprite = 'images/enemy-bug.png';
 };
 
@@ -46,7 +56,7 @@ Player.prototype.handleInput = function(keyPress){
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
-var allEnemies = [new Enemy()];
+var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
 var player = new Player();
 
 
