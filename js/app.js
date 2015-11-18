@@ -47,6 +47,7 @@ var Player = function() {
     // sprite height = 171
     // col widths = 101
     // randomise col between 0 and 4. Math.floor(Math.random()*(max-min+1)+min);
+    // player StartY is grid height - sprite height - aesthetic offset = 394
     this.x = Math.floor(Math.random() * 5 + 0) * 101;
     this.y = 606 - 171 - 41;
     this.sprite = 'images/char-boy.png';
@@ -66,17 +67,33 @@ Player.prototype.handleInput = function(keyPress){
     // want to move player by one tile in relevant direction
       switch (keyPress) {
         case 'left':
-          this.x -= 101;
-          break;
+          if (this.x - 101 < 0) {
+            break;
+          } else {
+            this.x -= 101;
+            break;
+          }
         case 'right':
-          this.x += 101;
-          break;
+          if (this.x + 101 >= 505) {
+            break;
+          } else {
+            this.x += 101;
+            break;
+          }
         case 'up':
-          this.y -= 83;
-          break;
+          if (this.y - 83 < 0) {
+            break; // TODO: player reset
+          } else {
+            this.y -= 83;
+            break;
+          }
         case 'down':
-          this.y += 83;
-          break;
+          if (this.y + 83 > 394) {
+            break;
+          } else {
+            this.y += 83;
+            break;
+          }
         default:
         return;
       }
