@@ -48,7 +48,7 @@ var Player = function() {
     // col widths = 101
     // randomise col between 0 and 4. Math.floor(Math.random()*(max-min+1)+min);
     this.x = Math.floor(Math.random() * 5 + 0) * 101;
-    this.y = 606 - 171;
+    this.y = 606 - 171 - 41;
     this.sprite = 'images/char-boy.png';
 };
 
@@ -63,7 +63,23 @@ Player.prototype.render = function(){
 };
 
 Player.prototype.handleInput = function(keyPress){
-    // tbd
+    // want to move player by one tile in relevant direction
+      switch (keyPress) {
+        case 'left':
+          this.x -= 101;
+          break;
+        case 'right':
+          this.x += 101;
+          break;
+        case 'up':
+          this.y -= 83;
+          break;
+        case 'down':
+          this.y += 83;
+          break;
+        default:
+        return;
+      }
 };
 
 
