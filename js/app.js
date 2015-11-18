@@ -15,9 +15,12 @@ var Enemy = function() {
 
     this.y = Math.floor(Math.random() * 3 + 1) * 83 - 21;
 
-    var minSpeed = 128;
-    var maxSpeed = 256;
-    this.speed = Math.floor(Math.random()*(maxSpeed - minSpeed + 1) + minSpeed);
+    // bug speed - want randomised 3, slow (1), med(2), fast(3)
+
+    var minSpeed = 100;
+    //var maxSpeed = 256;
+    //this.speed = Math.floor(Math.random()*(maxSpeed - minSpeed + 1) + minSpeed);
+    this.speed = Math.floor(Math.random() * 3 + 1) * minSpeed;
 
     this.sprite = 'images/enemy-bug.png';
 };
