@@ -33,11 +33,28 @@ Enemy.prototype.update = function(dt) {
     // all computers.
     // the new x position = old x + distance traveled in timeframe
     this.x = this.x + this.speed * dt;
+    if (this.x > 505) {
+      this.x = this.reset();
+    }
 };
 
 // Draw the enemy on the screen, required method for game
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+// Enemy reset. delete from array once off screen
+// if enemies less than specific number create new one.
+Enemy.prototype.reset = function() {
+    // tbd
+    var minEnemies = 3;
+    var i = allEnemies.indexOf(this);
+    if (i != -1) {
+      allEnemies.splice(i, 1);
+      if (allEnemies.length < minEnemies) {
+        allEnemies.push(new Enemy());
+      }
+    }
 };
 
 // Now write your own player class
