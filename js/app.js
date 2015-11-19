@@ -60,12 +60,9 @@ Enemy.prototype.reset = function() {
 // This class requires an update(), render() and
 // a handleInput() method.
 var Player = function() {
-    // sprite height = 171
-    // col widths = 101
-    // randomise col between 0 and 4. Math.floor(Math.random()*(max-min+1)+min);
-    // player StartY is grid height - sprite height - aesthetic offset = 394
     //this.x = Math.floor(Math.random() * 5 + 0) * 101;
     //this.y = 606 - 171 - 41;
+    this.score = 0;
     this.reset();
     this.sprite = 'images/char-boy.png';
 };
@@ -78,10 +75,18 @@ Player.prototype.update = function(dt) {
 
 Player.prototype.render = function(){
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+
+    // scoreboard
+    ctx.font = '30pt Helvetica';
+    ctx.fillStyle = 'orange';
+    ctx.strokeStyle = 'red';
+    ctx.clearRect(0, 0, 505, 50);
+    ctx.fillText('Score: ' + this.score, 10, 40);
 };
 
 Player.prototype.handleInput = function(keyPress){
     // want to move player by one tile in relevant direction
+    // when player reaches water add 1 point and reset start
       switch (keyPress) {
         case 'left':
           if (this.x - 101 < 0) {
@@ -100,6 +105,7 @@ Player.prototype.handleInput = function(keyPress){
         case 'up':
           if (this.y - 83 < 0) {
             this.reset();
+            this.score ++;
             break;
           } else {
             this.y -= 83;
@@ -119,6 +125,13 @@ Player.prototype.handleInput = function(keyPress){
 
 Player.prototype.reset = function(dt) {
     // if reach water reset with same player
+    // moved setting x and y position here.
+    // sprite height = 171
+    // col widths = 101
+    // randomise col between 0 and 4.
+    // Math.floor(Math.random() * (max - min + 1) + min);
+    // player StartY is grid height - sprite height - aesthetic offset = 394
+
     this.x = Math.floor(Math.random() * 5 + 0) * 101;
     this.y = 606 - 171 - 41;
 
@@ -131,6 +144,7 @@ Player.prototype.reset = function(dt) {
 // Place the player object in a variable called player
 var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
 var player = new Player();
+
 
 
 // This listens for key presses and sends the keys to your
