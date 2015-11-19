@@ -46,7 +46,6 @@ Enemy.prototype.render = function() {
 // Enemy reset. delete from array once off screen
 // if enemies less than specific number create new one.
 Enemy.prototype.reset = function() {
-    // tbd
     var minEnemies = 3;
     var i = allEnemies.indexOf(this);
     if (i != -1) {
@@ -65,8 +64,9 @@ var Player = function() {
     // col widths = 101
     // randomise col between 0 and 4. Math.floor(Math.random()*(max-min+1)+min);
     // player StartY is grid height - sprite height - aesthetic offset = 394
-    this.x = Math.floor(Math.random() * 5 + 0) * 101;
-    this.y = 606 - 171 - 41;
+    //this.x = Math.floor(Math.random() * 5 + 0) * 101;
+    //this.y = 606 - 171 - 41;
+    this.reset();
     this.sprite = 'images/char-boy.png';
 };
 
@@ -99,7 +99,8 @@ Player.prototype.handleInput = function(keyPress){
           }
         case 'up':
           if (this.y - 83 < 0) {
-            break; // TODO: player reset
+            this.reset();
+            break;
           } else {
             this.y -= 83;
             break;
@@ -114,6 +115,14 @@ Player.prototype.handleInput = function(keyPress){
         default:
         return;
       }
+};
+
+Player.prototype.reset = function(dt) {
+    // if reach water reset with same player
+    this.x = Math.floor(Math.random() * 5 + 0) * 101;
+    this.y = 606 - 171 - 41;
+
+    // if collide reset with new player
 };
 
 
