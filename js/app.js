@@ -15,6 +15,10 @@ var Enemy = function() {
 
     this.y = Math.floor(Math.random() * 3 + 1) * 83 - 21;
 
+    // target sprite dimensions (actual = 101 * 171)
+    this.width = 101;
+    this.height = 65;
+
     // bug speed - want randomised 3, slow (1), med(2), fast(3)
 
     var minSpeed = 100;
@@ -33,6 +37,11 @@ Enemy.prototype.update = function(dt) {
     // all computers.
     // the new x position = old x + distance traveled in timeframe
     this.x = this.x + this.speed * dt;
+    if (this.checkCollisions()) {
+      player.score --;
+      player.reset();
+      this.x = this.reset();
+    }
     if (this.x > 505) {
       this.x = this.reset();
     }
@@ -56,21 +65,40 @@ Enemy.prototype.reset = function() {
     }
 };
 
+Enemy.prototype.checkCollisions = function() {
+//Enemy.prototype.checkCollisions = function(x, y, w, h, x2, y2, w2, h2) {
+    // approx bug dimensions relative to its image:
+    // x = x, y = y - 26, width = width, height = 65
+    // approx player dimensions relative to its image:
+    // x = x + 15, y = y - 31, width = 70, height = 80
+
+    if (this.x < player.x + 15 + player.width &&
+        this.x + this.width > player.x + 15 &&
+        this.y - 26 < player.y - 31 + player.height &&
+        this.height + this.y - 26 > player.y - 31) {
+         // collision detected!
+        return true;
+    }
+    return false;
+};
+
 // Now write your own player class
 // This class requires an update(), render() and
 // a handleInput() method.
 var Player = function() {
     //this.x = Math.floor(Math.random() * 5 + 0) * 101;
     //this.y = 606 - 171 - 41;
+
+    // target sprite dimensions (actual = 101 * 171)
+    this.width = 70;
+    this.height = 80;
     this.score = 0;
     this.reset();
     this.sprite = 'images/char-boy.png';
 };
 
-Player.prototype.update = function(dt) {
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
+Player.prototype.update = function() {
+    // tbd
 };
 
 Player.prototype.render = function(){
