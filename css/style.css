@@ -1,3 +1,26 @@
 body {
     text-align: center;
 }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    padding: 0;
+    margin: 0;
+    font-family: 'Wendy One', sans-serif;
+}
+
+.container {
+  background-color: #ff7f00;
+    width: 505px;
+    margin: auto;
+    color: #800040;
+    border-radius: 15px;
+}
+
+.hidden {
+  display: none;
+}

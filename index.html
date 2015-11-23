@@ -1,13 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Effective JavaScript: Frogger</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <title>Bogger: Effective JavaScript</title>
+  <link href='https://fonts.googleapis.com/css?family=Wendy+One' rel='stylesheet'>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="shortcut icon" href="images/icon.png" type="image/x-icon">
 </head>
 <body>
-    <script src="js/resources.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/engine.js"></script>
+
+  <div class="container">
+    <!-- header -->
+    <header>
+      <div id="game-title"><h1>Bogger</h1></div>
+      <div id="score"></div>
+      <div id="lives"></div>
+      <div id="bling"></div>
+    </header>
+
+    <!-- use space bar to play or pause -->
+
+    <!-- instructions -->
+    <div id="instructions" class="hidden">
+      <h2>How To Play:</h2>
+      <p>Arrow Keys move the player</p>
+      <p>Spacebar might pause</p>
+      <p>You have three lives</p>
+      <p>Collect bling to earn extra points</p>
+      <p>Rescue the prince</p>
+      <p>Lose points if a bug hits you</p>
+      <h2>On y va!!</h2>
+    </div>
+
+    <!-- restart button -->
+    <div id="button-restart"></div>
+
+  </div>
+
+
+  <!-- scripts for the game -->
+  <script src="js/resources.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/engine.js"></script>
+
 </body>
 </html>
