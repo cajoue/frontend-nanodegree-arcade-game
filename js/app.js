@@ -105,10 +105,11 @@ Player.prototype.render = function(){
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 
     // scoreboard
-    ctx.font = '30pt Helvetica';
+    ctx.font = '30pt Wendy One';
     ctx.fillStyle = 'orange';
     ctx.strokeStyle = 'red';
     ctx.clearRect(0, 0, 505, 50);
+    ctx.textAlign = 'left';
     ctx.fillText('Score: ' + this.score, 10, 40);
 };
 
@@ -166,12 +167,138 @@ Player.prototype.reset = function(dt) {
     // if collide reset with new player
 };
 
+// GameScreen class
+// I'm going to try inheritance on this one
+// child screens: GameStart, GameOver
+// based on Stack Overflow answer from Juan Mendes
+// http://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
+/**
+ * Draws a rounded rectangle using the current state of the canvas.
+ * If you omit the last three params, it will draw a rectangle
+ * outline with a 5 pixel border radius
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Number} x The top left x coordinate
+ * @param {Number} y The top left y coordinate
+ * @param {Number} width The width of the rectangle
+ * @param {Number} height The height of the rectangle
+ * @param {Number} [radius = 5] The corner radius; It can also be an object
+ *                 to specify different radii for corners
+ * @param {Number} [radius.tl = 0] Top left
+ * @param {Number} [radius.tr = 0] Top right
+ * @param {Number} [radius.br = 0] Bottom right
+ * @param {Number} [radius.bl = 0] Bottom left
+ * @param {Boolean} [fill = false] Whether to fill the rectangle.
+ * @param {Boolean} [stroke = true] Whether to stroke the rectangle.
+ */
+
+var GameScreen = function() {
+    // match size and position of initial game screen
+    this.x = 0;
+    this.y = 50;
+
+    this.width = 505;
+    this.height = 536;
+
+};
+
+GameScreen.prototype.render = function () {
+  this.drawScreen(this.x, this.y, this.width, this.height);
+  this.infoText();
+};
+
+GameScreen.prototype.drawScreen = function (x, y, width, height) {
+  var radius = 10;
+
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = 'rgb(128, 0, 64)';
+  ctx.fillStyle = 'rgba(255, 127, 0, 0.8)';
+
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+};
+
+var GameStart = function(){
+  this.titleText = 'How To Play';
+  this.show = true;
+};
+
+GameStart.prototype = new GameScreen();
+
+GameStart.prototype.infoText = function () {
+  var y = this.y;
+  var lineHeight = 50;
+  var lineExtraHeight = 70;
+  ctx.font = '48pt Wendy One';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'white';
+  ctx.fillText(this.titleText, this.width / 2, y += lineExtraHeight);
+  ctx.font = '24pt Wendy One';
+  ctx.fillText('Arrow keys move the player', this.width / 2, y += lineHeight);
+  ctx.fillText('You have 3 lives', this.width / 2, y += lineHeight);
+  ctx.fillText('Collect BLING for big points', this.width / 2, y += lineHeight);
+  ctx.fillText('Rescue the Prince', this.width / 2, y += lineHeight);
+  ctx.fillText('Lose points if a BUG hits you', this.width / 2, y += lineHeight);
+  ctx.font = '48pt Wendy One';
+  ctx.fillText('On y va!!', this.width / 2, y += lineExtraHeight);
+  ctx.font = '24pt Wendy One';
+  ctx.fillStyle = 'rgb(128, 0, 64)';
+  ctx.fillText('Spacebar to PLAY or PAUSE', this.width / 2, y += lineHeight);
+};
+
+var GameOver = function(){
+  this.x = 25;
+  this.y = 200;
+  this.width = 455;
+  this.height = 250;
+  this.titleText = 'GAME OVER';
+  this.show = false;
+};
+
+GameOver.prototype = new GameScreen();
+
+GameOver.prototype.infoText = function () {
+  var y = this.height;
+  var lineHeight = 50;
+  var lineExtraHeight = 70;
+  ctx.font = '48pt Wendy One';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'white';
+  ctx.fillText(this.titleText, this.width / 2 + 25, y += lineExtraHeight);
+  // ctx.font = '24pt Wendy One';
+  // ctx.fillText('Arrow keys move the player', this.width / 2, y += lineHeight);
+  // ctx.fillText('You have 3 lives', this.width / 2, y += lineHeight);
+  // ctx.fillText('Collect BLING for big points', this.width / 2, y += lineHeight);
+  // ctx.fillText('Rescue the Prince', this.width / 2, y += lineHeight);
+  // ctx.fillText('Lose points if a BUG hits you', this.width / 2, y += lineHeight);
+  // ctx.font = '48pt Wendy One';
+  // ctx.fillText('On y va!!', this.width / 2, y += lineExtraHeight);
+  ctx.font = '24pt Wendy One';
+  ctx.fillStyle = 'rgb(128, 0, 64)';
+  ctx.fillText('Spacebar to RESTART', this.width / 2 + 25, y += lineHeight);
+};
+
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
+
+
 var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
 var player = new Player();
+var gameStart = new GameStart();
+var gameOver = new GameOver();
+
 
 
 
