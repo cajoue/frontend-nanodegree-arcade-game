@@ -312,7 +312,21 @@ GameOverScreen.prototype.infoText = function () {
   ctx.fillText('Spacebar to RESTART', this.width / 2 + 25, y += lineHeight);
 };
 
+//
+// GameState
+//
 
+var GameState = function(){
+  this.gameOn = false;
+  this.startScreen = true;
+  this.gameOver = false;
+};
+
+// need to handle input from space bar key 32
+// isGameOver to change states and call screen
+// isStartScreen
+// isGameOn
+// isPaused.... maybe
 
 
 
@@ -332,6 +346,7 @@ var gameOverScreen = new GameOverScreen();
 // Player.handleInput() method. You don't need to modify this.
 document.addEventListener('keyup', function(e) {
   var allowedKeys = {
+    32: 'space',
     37: 'left',
     38: 'up',
     39: 'right',
