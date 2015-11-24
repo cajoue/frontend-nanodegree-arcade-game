@@ -136,7 +136,7 @@ var Engine = (function(global) {
             }
         }
 
-
+        scoreBoard.render();
         renderEntities();
         gameInfo.render();
         gameOverScreen.render();
@@ -174,7 +174,8 @@ var Engine = (function(global) {
         'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/char-boy.png',
+        'images/Heart.png'
     ]);
     Resources.onReady(init);
 

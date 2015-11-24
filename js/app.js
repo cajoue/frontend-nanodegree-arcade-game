@@ -46,7 +46,7 @@ Enemy.prototype.update = function(dt) {
     if (gameState.playerLives === 0) {
       return gameState.isGameOver(true);
     }
-    player.score --;
+    scoreBoard.score --;
     player.reset();
     this.x = this.reset();
 
@@ -102,7 +102,7 @@ var Player = function() {
   // target sprite dimensions (actual = 101 * 171)
   this.width = 70;
   this.height = 80;
-  this.score = 0;
+  //this.score = 0;
   this.reset();
   this.sprite = 'images/char-boy.png';
 };
@@ -113,14 +113,6 @@ Player.prototype.update = function() {
 
 Player.prototype.render = function(){
   ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-
-  // scoreboard
-  ctx.font = '30pt Wendy One';
-  ctx.fillStyle = 'orange';
-  ctx.strokeStyle = 'red';
-  ctx.clearRect(0, 0, 505, 50);
-  ctx.textAlign = 'left';
-  ctx.fillText('Score: ' + this.score, 10, 40);
 };
 
 Player.prototype.handleInput = function(keyPress){
@@ -177,7 +169,7 @@ Player.prototype.handleInput = function(keyPress){
       case 'up':
       if (this.y - 83 < 0) {
         this.reset();
-        this.score ++;
+        scoreBoard.score ++;
         break;
       } else {
         this.y -= 83;
@@ -347,7 +339,7 @@ GameOverScreen.prototype.infoText = function () {
   ctx.fillStyle = 'white';
   ctx.fillText(this.titleText, this.width / 2 + 25, y += lineExtraHeight);
   ctx.font = '24pt Wendy One';
-  ctx.fillText('Your Score: ' + player.score, this.width / 2, y += lineHeight);
+  ctx.fillText('Your Score: ' + scoreBoard.score, this.width / 2, y += lineHeight);
   ctx.fillStyle = 'rgb(128, 0, 64)';
   ctx.fillText('Press i for Info', this.width / 2 + 25, y += lineHeight);
   ctx.fillText('Spacebar to RESTART', this.width / 2 + 25, y += lineHeight);
@@ -363,7 +355,6 @@ var GameState = function(){
   this.gameOver = false;
   this.paused = false;
 };
-
 
 // isStartScreen
 // isGameOn
@@ -382,6 +373,52 @@ GameState.prototype.isGameOver = function (gameOver) {
 GameState.prototype.startNewGame = function () {
   this.playerLives = 3;
   player = new Player();
+  scoreBoard = new ScoreBoard();
+  this.lifeArray = [];
+};
+
+
+//
+// scoreboard
+//
+
+// feel need to separate the scoreboard from the player
+
+var ScoreBoard = function(){
+  this.x = 10;
+  this.lifeX = 192; // to centre on screen based on 3 lives
+  this.y = 40;
+  this.lifeY = -10; // to take account of blank space at top
+  this.score = 0;
+  this.sprite = 'images/Heart.png';
+};
+
+ScoreBoard.prototype.render = function () {
+  // scoreboard
+  ctx.font = '30pt Wendy One';
+  ctx.fillStyle = 'orange';
+  ctx.strokeStyle = 'red';
+  ctx.clearRect(0, 0, 505, 50);
+  ctx.textAlign = 'left';
+  ctx.fillText('Score: ' + this.score, this.x, this.y);
+
+  // lives
+  // heart image 101 x 171
+  // main area from y = 40 to 141
+  // x is ok at 101
+  // render at less than half size align right if possible
+  // ctx.drawImage(image, dx, dy, dWidth, dHeight);
+  var spriteHeart = Resources.get(this.sprite);
+  var spriteWidth = spriteHeart.width * 0.4;
+  var spriteHeight = spriteHeart.height * 0.4;
+  // render one for each life
+  for (var i = 0; i < gameState.playerLives; i++) {
+    //array[i] maybe i'll need an array of lives.
+    ctx.drawImage(spriteHeart, this.lifeX + i * spriteWidth, this.lifeY, spriteWidth, spriteHeight);
+    //console.log((505 - spriteWidth * 3) / 2);
+  }
+
+
 };
 
 //
@@ -390,6 +427,7 @@ GameState.prototype.startNewGame = function () {
 
 var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
 var player = new Player();
+var scoreBoard = new ScoreBoard();
 var gameState = new GameState();
 var gameInfo = new GameInfo();
 var gameOverScreen = new GameOverScreen();
