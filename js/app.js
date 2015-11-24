@@ -42,9 +42,14 @@ Enemy.prototype.update = function(dt) {
   // the new x position = old x + distance traveled in timeframe
   this.x = this.x + this.speed * dt;
   if (this.checkCollisions()) {
+    gameState.playerLives --;
+    if (gameState.playerLives === 0) {
+      return gameState.isGameOver(true);
+    }
     player.score --;
     player.reset();
     this.x = this.reset();
+
   }
   if (this.x > 505) {
     this.x = this.reset();
@@ -354,6 +359,7 @@ var GameState = function(){
   this.startScreen = true;
   this.gameOver = false;
   this.paused = false;
+  this.playerLives = 3;
 };
 
 // need to handle input from space bar key 32
@@ -362,8 +368,14 @@ var GameState = function(){
 // isGameOn
 // isPaused.... maybe
 
-GameState.prototype.isStartScreen = function () {
-  // body...
+GameState.prototype.isGameOver = function (gameOver) {
+  if (gameOver) {
+    this.gameOver = gameOver;
+    this.gameOn = false;
+    this.startScreen = false;
+    //this.paused = true;
+    gameOverScreen.show = gameState.gameOver;
+  }
 };
 
 
