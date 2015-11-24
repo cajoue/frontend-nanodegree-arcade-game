@@ -135,7 +135,7 @@ Player.prototype.handleInput = function(keyPress){
       gameState.startScreen = false;
       gameState.gameOn = true;
       gameInfo.show = gameState.startScreen;
-      // TODO  start new game (new player, score etc)
+      gameState.startNewGame();
       break;
       default:
       return; // do nothing
@@ -147,7 +147,7 @@ Player.prototype.handleInput = function(keyPress){
       gameState.gameOver = false;
       gameState.gameOn = true;
       gameOverScreen.show = gameState.gameOver;
-      // TODO  start new game (new player, score etc)
+      gameState.startNewGame();
       break;
       default:
       return; // do nothing
@@ -330,23 +330,17 @@ var GameOverScreen = function(){
 GameOverScreen.prototype = new GameScreen();
 
 GameOverScreen.prototype.infoText = function () {
-  var y = this.height;
+  var y = this.y;
   var lineHeight = 50;
   var lineExtraHeight = 70;
   ctx.font = '48pt Wendy One';
   ctx.textAlign = 'center';
   ctx.fillStyle = 'white';
   ctx.fillText(this.titleText, this.width / 2 + 25, y += lineExtraHeight);
-  // ctx.font = '24pt Wendy One';
-  // ctx.fillText('Arrow keys move the player', this.width / 2, y += lineHeight);
-  // ctx.fillText('You have 3 lives', this.width / 2, y += lineHeight);
-  // ctx.fillText('Collect BLING for big points', this.width / 2, y += lineHeight);
-  // ctx.fillText('Rescue the Prince', this.width / 2, y += lineHeight);
-  // ctx.fillText('Lose points if a BUG hits you', this.width / 2, y += lineHeight);
-  // ctx.font = '48pt Wendy One';
-  // ctx.fillText('On y va!!', this.width / 2, y += lineExtraHeight);
   ctx.font = '24pt Wendy One';
+  ctx.fillText('Your Score: ' + player.score, this.width / 2, y += lineHeight);
   ctx.fillStyle = 'rgb(128, 0, 64)';
+  ctx.fillText('Press i for Info', this.width / 2 + 25, y += lineHeight);
   ctx.fillText('Spacebar to RESTART', this.width / 2 + 25, y += lineHeight);
 };
 
@@ -359,7 +353,7 @@ var GameState = function(){
   this.startScreen = true;
   this.gameOver = false;
   this.paused = false;
-  this.playerLives = 3;
+  //this.playerLives = 3;
 };
 
 // need to handle input from space bar key 32
@@ -378,6 +372,10 @@ GameState.prototype.isGameOver = function (gameOver) {
   }
 };
 
+GameState.prototype.startNewGame = function () {
+  this.playerLives = 3;
+  player = new Player();
+};
 
 //
 // instantiate objects
