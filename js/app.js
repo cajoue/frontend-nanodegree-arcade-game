@@ -1,3 +1,7 @@
+//
+// Enemy class
+//
+
 // Enemies our player must avoid
 var Enemy = function() {
     // Variables applied to each of our instances go here,
@@ -82,9 +86,10 @@ Enemy.prototype.checkCollisions = function() {
     return false;
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
+//
+// Player class
+//
+
 var Player = function() {
     //this.x = Math.floor(Math.random() * 5 + 0) * 101;
     //this.y = 606 - 171 - 41;
@@ -167,9 +172,12 @@ Player.prototype.reset = function(dt) {
     // if collide reset with new player
 };
 
+//
 // GameScreen class
+//
+
 // I'm going to try inheritance on this one
-// child screens: GameStart, GameOver
+// child screens: GameInfo, GameOver
 // based on Stack Overflow answer from Juan Mendes
 // http://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
 /**
@@ -190,6 +198,10 @@ Player.prototype.reset = function(dt) {
  * @param {Boolean} [fill = false] Whether to fill the rectangle.
  * @param {Boolean} [stroke = true] Whether to stroke the rectangle.
  */
+
+//
+// GameScreen message template
+//
 
 var GameScreen = function() {
     // match size and position of initial game screen
@@ -228,14 +240,18 @@ GameScreen.prototype.drawScreen = function (x, y, width, height) {
   ctx.stroke();
 };
 
-var GameStart = function(){
+//
+// Game Information Screen
+//
+
+var GameInfo = function(){
   this.titleText = 'How To Play';
   this.show = true;
 };
 
-GameStart.prototype = new GameScreen();
+GameInfo.prototype = new GameScreen();
 
-GameStart.prototype.infoText = function () {
+GameInfo.prototype.infoText = function () {
   var y = this.y;
   var lineHeight = 50;
   var lineExtraHeight = 70;
@@ -255,6 +271,10 @@ GameStart.prototype.infoText = function () {
   ctx.fillStyle = 'rgb(128, 0, 64)';
   ctx.fillText('Spacebar to PLAY or PAUSE', this.width / 2, y += lineHeight);
 };
+
+//
+// Game Over Screen
+//
 
 var GameOver = function(){
   this.x = 25;
@@ -288,15 +308,13 @@ GameOver.prototype.infoText = function () {
   ctx.fillText('Spacebar to RESTART', this.width / 2 + 25, y += lineHeight);
 };
 
-
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
-
+//
+// instantiate objects
+//
 
 var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
 var player = new Player();
-var gameStart = new GameStart();
+var gameInfo = new GameInfo();
 var gameOver = new GameOver();
 
 
