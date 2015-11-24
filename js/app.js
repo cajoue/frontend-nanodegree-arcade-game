@@ -121,39 +121,72 @@ Player.prototype.render = function(){
 Player.prototype.handleInput = function(keyPress){
   // want to move player by one tile in relevant direction
   // when player reaches water add 1 point and reset start
-  switch (keyPress) {
-    case 'left':
-    if (this.x - 101 < 0) {
+
+  // handle spacebar from start screen
+
+  if (gameState.startScreen) {
+    switch (keyPress) {
+      case 'space':
+      gameState.startScreen = false;
+      gameState.gameOn = true;
+      gameInfo.show = gameState.startScreen;
+      // TODO  start new game (new player, score etc)
       break;
-    } else {
-      this.x -= 101;
-      break;
+      default:
+      return; // do nothing
     }
-    case 'right':
-    if (this.x + 101 >= 505) {
+
+  } else if (gameState.gameOver){
+    switch (keyPress) {
+      case 'space':
+      gameState.gameOver = false;
+      gameState.gameOn = true;
+      gameOverScreen.show = gameState.gameOver;
+      // TODO  start new game (new player, score etc)
       break;
-    } else {
-      this.x += 101;
-      break;
+      default:
+      return; // do nothing
     }
-    case 'up':
-    if (this.y - 83 < 0) {
-      this.reset();
-      this.score ++;
-      break;
-    } else {
-      this.y -= 83;
-      break;
+
+    //} else if (gameState.isPaused){
+
+  } else {
+
+    switch (keyPress) {
+      //case:'space': // if implement game pause
+      case 'left':
+      if (this.x - 101 < 0) {
+        break;
+      } else {
+        this.x -= 101;
+        break;
+      }
+      case 'right':
+      if (this.x + 101 >= 505) {
+        break;
+      } else {
+        this.x += 101;
+        break;
+      }
+      case 'up':
+      if (this.y - 83 < 0) {
+        this.reset();
+        this.score ++;
+        break;
+      } else {
+        this.y -= 83;
+        break;
+      }
+      case 'down':
+      if (this.y + 83 > 394) {
+        break;
+      } else {
+        this.y += 83;
+        break;
+      }
+      default:
+      return;
     }
-    case 'down':
-    if (this.y + 83 > 394) {
-      break;
-    } else {
-      this.y += 83;
-      break;
-    }
-    default:
-    return;
   }
 };
 
@@ -250,7 +283,7 @@ GameScreen.prototype.drawScreen = function (x, y, width, height) {
 
 var GameInfo = function(){
   this.titleText = 'How To Play';
-  this.show = true;
+  this.show = gameState.startScreen;
 };
 
 GameInfo.prototype = new GameScreen();
@@ -286,7 +319,7 @@ var GameOverScreen = function(){
   this.width = 455;
   this.height = 250;
   this.titleText = 'GAME OVER';
-  this.show = false;
+  this.show = gameState.gameOver;
 };
 
 GameOverScreen.prototype = new GameScreen();
@@ -320,6 +353,7 @@ var GameState = function(){
   this.gameOn = false;
   this.startScreen = true;
   this.gameOver = false;
+  this.paused = false;
 };
 
 // need to handle input from space bar key 32
@@ -328,6 +362,9 @@ var GameState = function(){
 // isGameOn
 // isPaused.... maybe
 
+GameState.prototype.isStartScreen = function () {
+  // body...
+};
 
 
 //
@@ -336,6 +373,7 @@ var GameState = function(){
 
 var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
 var player = new Player();
+var gameState = new GameState();
 var gameInfo = new GameInfo();
 var gameOverScreen = new GameOverScreen();
 
