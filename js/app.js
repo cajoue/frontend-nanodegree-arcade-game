@@ -127,8 +127,6 @@ Player.prototype.handleInput = function(keyPress){
   // want to move player by one tile in relevant direction
   // when player reaches water add 1 point and reset start
 
-  // handle spacebar from start screen
-
   if (gameState.startScreen) {
     switch (keyPress) {
       case 'space':
@@ -148,6 +146,9 @@ Player.prototype.handleInput = function(keyPress){
       gameState.gameOn = true;
       gameOverScreen.show = gameState.gameOver;
       gameState.startNewGame();
+      break;
+      case 'i':
+      gameInfo.showScreen();
       break;
       default:
       return; // do nothing
@@ -206,8 +207,6 @@ Player.prototype.reset = function(dt) {
 
   this.x = Math.floor(Math.random() * 5 + 0) * 101;
   this.y = 606 - 171 - 41;
-
-  // if collide reset with new player
 };
 
 //
@@ -314,6 +313,16 @@ GameInfo.prototype.infoText = function () {
   ctx.fillText('Spacebar to PLAY or PAUSE', this.width / 2, y += lineHeight);
 };
 
+GameInfo.prototype.showScreen = function () {
+  gameState.gameOver = false;
+  gameState.gameOn = false;
+  gameOverScreen.show = false;
+  gameState.startScreen = true;
+  this.show = gameState.startScreen;
+  this.render();
+};
+
+
 //
 // Game Over Screen
 //
@@ -353,11 +362,9 @@ var GameState = function(){
   this.startScreen = true;
   this.gameOver = false;
   this.paused = false;
-  //this.playerLives = 3;
 };
 
-// need to handle input from space bar key 32
-// isGameOver to change states and call screen
+
 // isStartScreen
 // isGameOn
 // isPaused.... maybe
@@ -398,7 +405,8 @@ document.addEventListener('keyup', function(e) {
     37: 'left',
     38: 'up',
     39: 'right',
-    40: 'down'
+    40: 'down',
+    73: 'i'
   };
 
   player.handleInput(allowedKeys[e.keyCode]);
