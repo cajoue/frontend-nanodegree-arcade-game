@@ -138,8 +138,8 @@ var Engine = (function(global) {
 
 
         renderEntities();
-        //gameInfo.render();
-        //gameOver.render();
+        gameInfo.render();
+        gameOverScreen.render();
     }
 
     /* This function is called by the render function and is called on each game
