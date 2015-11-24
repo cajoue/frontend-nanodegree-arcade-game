@@ -79,7 +79,10 @@ var Engine = (function(global) {
      * on the entities themselves within your app.js file).
      */
     function update(dt) {
+      // only updateEntities when game not paused
+      if (!gameState.paused) {
         updateEntities(dt);
+      }
         // checkCollisions();
     }
 
@@ -140,6 +143,7 @@ var Engine = (function(global) {
         renderEntities();
         gameInfo.render();
         gameOverScreen.render();
+        gamePausedScreen.render();
     }
 
     /* This function is called by the render function and is called on each game

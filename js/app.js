@@ -146,12 +146,16 @@ Player.prototype.handleInput = function(keyPress){
       return; // do nothing
     }
 
-    //} else if (gameState.isPaused){
-
+  } else if (gameState.paused){
+    gameState.paused = false;
+    gamePausedScreen.show = false;
   } else {
 
     switch (keyPress) {
-      //case:'space': // if implement game pause
+      case 'space': // if implement game pause
+      gameState.paused = true;
+      gamePausedScreen.show = true;
+      break;
       case 'left':
       if (this.x - 101 < 0) {
         break;
@@ -248,6 +252,7 @@ GameScreen.prototype.render = function () {
   if (this.show) {
     this.drawScreen(this.x, this.y, this.width, this.height);
     this.infoText();
+    gameState.paused = true;
   }
 };
 
@@ -297,7 +302,8 @@ GameInfo.prototype.infoText = function () {
   ctx.fillText('You have 3 lives', this.width / 2, y += lineHeight);
   ctx.fillText('Collect BLING for big points', this.width / 2, y += lineHeight);
   ctx.fillText('Rescue the Prince', this.width / 2, y += lineHeight);
-  ctx.fillText('Lose points if a BUG hits you', this.width / 2, y += lineHeight);
+  ctx.fillText('Lose a point if a BUG hits you', this.width / 2, y += lineHeight);
+  ctx.fillText('-- !! and a LIFE !! --', this.width / 2, y += lineHeight);
   ctx.font = '48pt Wendy One';
   ctx.fillText('On y va!!', this.width / 2, y += lineExtraHeight);
   ctx.font = '24pt Wendy One';
@@ -346,6 +352,36 @@ GameOverScreen.prototype.infoText = function () {
 };
 
 //
+// Game Over Screen
+//
+
+var GamePausedScreen = function(){
+  this.x = 25;
+  this.y = 200;
+  this.width = 455;
+  this.height = 150;
+  this.titleText = 'PAUSED';
+  this.show = false;
+};
+
+GamePausedScreen.prototype = new GameScreen();
+
+GamePausedScreen.prototype.infoText = function () {
+  var y = this.y;
+  var lineHeight = 50;
+  var lineExtraHeight = 70;
+  ctx.font = '48pt Wendy One';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'white';
+  ctx.fillText(this.titleText, this.width / 2 + 25, y += lineExtraHeight);
+  ctx.font = '24pt Wendy One';
+  //ctx.fillText('Your Score: ' + scoreBoard.score, this.width / 2, y += lineHeight);
+  ctx.fillStyle = 'rgb(128, 0, 64)';
+  //ctx.fillText('Press i for Info', this.width / 2 + 25, y += lineHeight);
+  ctx.fillText('Spacebar to CONTINUE', this.width / 2 + 25, y += lineHeight);
+};
+
+//
 // GameState
 //
 
@@ -353,7 +389,7 @@ var GameState = function(){
   this.gameOn = false;
   this.startScreen = true;
   this.gameOver = false;
-  this.paused = false;
+  this.paused = true;
 };
 
 // isStartScreen
@@ -365,16 +401,27 @@ GameState.prototype.isGameOver = function (gameOver) {
     this.gameOver = gameOver;
     this.gameOn = false;
     this.startScreen = false;
-    //this.paused = true;
+    this.paused = true;
     gameOverScreen.show = gameState.gameOver;
+  }
+};
+
+GameState.prototype.isPaused = function (pause) {
+  if (pause) {
+    this.gameOver = false;
+    this.gameOn = false;
+    this.startScreen = false;
+    this.paused = pause;
+    gamePausedScreen.show = this.paused;
   }
 };
 
 GameState.prototype.startNewGame = function () {
   this.playerLives = 3;
+  this.paused = false;
   player = new Player();
   scoreBoard = new ScoreBoard();
-  this.lifeArray = [];
+  //this.lifeArray = [];
 };
 
 
@@ -417,8 +464,6 @@ ScoreBoard.prototype.render = function () {
     ctx.drawImage(spriteHeart, this.lifeX + i * spriteWidth, this.lifeY, spriteWidth, spriteHeight);
     //console.log((505 - spriteWidth * 3) / 2);
   }
-
-
 };
 
 //
@@ -431,6 +476,7 @@ var scoreBoard = new ScoreBoard();
 var gameState = new GameState();
 var gameInfo = new GameInfo();
 var gameOverScreen = new GameOverScreen();
+var gamePausedScreen = new GamePausedScreen();
 
 
 
