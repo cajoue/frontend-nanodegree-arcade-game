@@ -352,7 +352,7 @@ GameOverScreen.prototype.infoText = function () {
 };
 
 //
-// Game Over Screen
+// Game Paused Screen
 //
 
 var GamePausedScreen = function(){
@@ -467,6 +467,35 @@ ScoreBoard.prototype.render = function () {
 };
 
 //
+// Bling class
+//
+
+// Bling our player must collect
+var Bling = function() {
+
+  // sprite dimensions
+  this.width = 101;
+  this.height = 171;
+
+  this.shrink = 0.6;
+  this.shrinkMore = 0.3;
+
+  // bling to appear in random places (same rows as bugs)
+  this.x = Math.floor(Math.random() * 5 + 0) * 101 + (101 * (1 - this.shrink) / 2);
+  this.y = Math.floor(Math.random() * 3 + 1) * 83 - 10 + (171 * (1 - this.shrink) / 2);
+
+  // gem to time out
+
+  // select random gem from array - just one for now
+  this.sprite = 'images/gem-blue.png';
+};
+
+// Draw the bling - smaller - it is huge!
+Bling.prototype.render = function() {
+  ctx.drawImage(Resources.get(this.sprite), this.x, this.y, this.width * this.shrink, this.height * this.shrink);
+};
+
+//
 // instantiate objects
 //
 
@@ -477,6 +506,7 @@ var gameState = new GameState();
 var gameInfo = new GameInfo();
 var gameOverScreen = new GameOverScreen();
 var gamePausedScreen = new GamePausedScreen();
+var bling = new Bling();
 
 
 
