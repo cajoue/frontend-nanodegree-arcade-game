@@ -297,6 +297,8 @@ Player.prototype.reset = function(dt) {
 
 // Bling our player must collect
 var Bling = function() {
+  this.visible = true;
+
   // Draw the bling - smaller - it is huge!
   this.shrink = 0.6;
 
@@ -336,6 +338,10 @@ var Bling = function() {
 
   // bling to time out or turn into imprenatable rock
 
+
+  // number of gems
+  this.minBling = 2;
+
   // select random gem from array
 
   var colour = ['blue', 'green', 'orange'];
@@ -348,7 +354,7 @@ Bling.prototype.render = function() {
     //console.log('collision: player at:' + player.x + 'bling at: ' + this.x);
     ctx.drawImage(Resources.get(this.gem), player.x + this.pickX, player.y + this.pickY, this.pickWidth, this.pickHeight);
   } else if (this.delivered) {
-    ctx.drawImage(Resources.get(this.gem), dropZone.x, dropZone.y, this.width, this.height);
+    ctx.drawImage(Resources.get(this.gem), dropZone.x + this.offsetX, dropZone.y, this.width, this.height);
   } else {
     ctx.drawImage(Resources.get(this.gem), this.x, this.y, this.width, this.height);
   }
@@ -363,6 +369,10 @@ Bling.prototype.update = function() {
     if (this.delivered) {
       this.picked = false;
       scoreBoard.score += 10;
+      // want some sort of timer here
+      dropZone.reset();
+      this.reset();
+
     }
   }
   //this.picked = false;
@@ -402,10 +412,17 @@ Bling.prototype.checkCollisions = function() {
   }
 };
 
-// drop bling
-Bling.prototype.drop = function (first_argument) {
-  // body...
+// reset bling
+Bling.prototype.reset = function () {
+    var i = bling.indexOf(this);
+    if (i != -1) {
+      bling.splice(i, 1);
+      if (bling.length < this.minBling) {
+        bling.push(new Bling());
+      }
+    }
 };
+
 
 //
 // DropZone class
@@ -435,6 +452,9 @@ DropZone.prototype.update = function() {
   // tbd
 };
 
+DropZone.prototype.reset = function () {
+  this.visible = false;
+};
 
 //
 // GameScreen class
