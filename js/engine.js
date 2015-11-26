@@ -80,7 +80,7 @@ var Engine = (function(global) {
      */
     function update(dt) {
       // only updateEntities when game not paused
-      if (!gameState.paused) {
+      if (!game.paused) {
         updateEntities(dt);
       }
         // checkCollisions();
@@ -98,6 +98,9 @@ var Engine = (function(global) {
             enemy.update(dt);
         });
         player.update();
+        bling.forEach(function(gem) {
+            gem.update(dt);
+        });
     }
 
     /* This function initially draws the "game level", it will then call
@@ -153,7 +156,9 @@ var Engine = (function(global) {
     function renderEntities() {
 
         player.render();
-        bling.render();
+        bling.forEach(function(gem) {
+            gem.render();
+        });
         /* Loop through all of the objects within the allEnemies array and call
          * the render function you have defined.
          */

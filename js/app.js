@@ -1,4 +1,63 @@
 //
+// Game
+//
+
+// it's getting a little muddied up so want to declare some constants and
+// resuable functions - should make things easier to read later.
+// the reworking was a nightmare - but threw up some essential fixes!
+
+var Game = function(){
+  this.gameOn = false;
+  this.startScreen = true;
+  this.gameOver = false;
+  this.paused = true;
+  this.tileWidth = 101;
+  this.tileHeight = 171;
+  this.rowHeight = 83;
+  this.rowCenterY = 21;
+  this.numRows = 6;
+  this.numCols = 5;
+};
+
+// isStartScreen
+// isGameOn
+// isPaused.... maybe
+
+Game.prototype.isGameOver = function (gameOver) {
+  if (gameOver) {
+    this.gameOver = gameOver;
+    this.gameOn = false;
+    this.startScreen = false;
+    this.paused = true;
+    gameOverScreen.show = game.gameOver;
+  }
+};
+
+Game.prototype.isPaused = function (pause) {
+  if (pause) {
+    this.gameOver = false;
+    this.gameOn = false;
+    this.startScreen = false;
+    this.paused = pause;
+    gamePausedScreen.show = this.paused;
+  }
+};
+
+Game.prototype.startNewGame = function () {
+  this.playerLives = 3;
+  this.paused = false;
+  player = new Player();
+  scoreBoard = new ScoreBoard();
+};
+
+Game.prototype.randomise = function (first, last) {
+  // Random number generator within a specified range
+  var randomNum = Math.floor(Math.random() * (last - first + 1) + first);
+  return randomNum;
+};
+
+
+//
 // Enemy class
 //
 
@@ -10,25 +69,37 @@ var Enemy = function() {
   // The image/sprite for our enemies, this uses
   // a helper we've provided to easily load images
 
-  // all bugs enter from left
-  this.x = 0;
+  // all bugs enter from left off canvas
+  this.x = - game.tileWidth;
+
+  // aesthetic offset - is now game.rowCenterY
+  // this.offsetY = 21;
 
   // randomise row between 1 and 3. Math.floor(Math.random()*(max-min+1)+min);
   // stone row heights = 83 centre is 42
   // offset y so that bug runs centrally 21 works...
 
-  this.y = Math.floor(Math.random() * 3 + 1) * 83 - 21;
+  //this.y = Math.floor(Math.random() * 3 + 1) * 83 - 21;
+  this.y = game.randomise(1, 3) * game.rowHeight - game.rowCenterY ;
 
-  // target sprite dimensions (actual = 101 * 171)
-  this.width = 101;
-  this.height = 65;
+  // tile size if necessary
+   this.width = game.tileWidth;
+   this.height = game.tileHeight;
+
+  // sprite target dimensions (actual = 101 * 171) (x from 11 to 87, y from 87 to 131)
+
+  this.hitWidth = 75;
+  this.hitHeight = 44; // required for depth of bug
+
+  // hit zone x offset for visible entity, enemy already centered in row y direction
+  this.hitX = 11;
 
   // bug speed - want randomised 3, slow (1), med(2), fast(3)
 
   var minSpeed = 100;
   //var maxSpeed = 256;
   //this.speed = Math.floor(Math.random()*(maxSpeed - minSpeed + 1) + minSpeed);
-  this.speed = Math.floor(Math.random() * 3 + 1) * minSpeed;
+  this.speed = game.randomise(1, 3) * minSpeed;
 
   this.sprite = 'images/enemy-bug.png';
 };
@@ -42,9 +113,9 @@ Enemy.prototype.update = function(dt) {
   // the new x position = old x + distance traveled in timeframe
   this.x = this.x + this.speed * dt;
   if (this.checkCollisions()) {
-    gameState.playerLives --;
-    if (gameState.playerLives === 0) {
-      return gameState.isGameOver(true);
+    game.playerLives --;
+    if (game.playerLives === 0) {
+      return game.isGameOver(true);
     }
     scoreBoard.score --;
     player.reset();
@@ -76,32 +147,46 @@ Enemy.prototype.reset = function() {
 
 
 //Enemy.prototype.checkCollisions = function(x, y, w, h, x2, y2, w2, h2) {};
-// approx bug dimensions relative to its image:
-// x = x, y = y - 26, width = width, height = 65
-// approx player dimensions relative to its image:
-// x = x + 15, y = y - 31, width = 70, height = 80
+
+// old
+
+// Enemy.prototype.checkCollisions = function() {
+//   if (this.x < player.x + 15 + player.width &&
+//     this.x + this.width > player.x + 15 &&
+//     this.y - 26 < player.y - 31 + player.height &&
+//     this.height + this.y - 26 > player.y - 31) {
+//     // collision detected!
+//     return true;
+//   }
+//   return false;
+// };
+
+
+// new
 Enemy.prototype.checkCollisions = function() {
-  if (this.x < player.x + 15 + player.width &&
-    this.x + this.width > player.x + 15 &&
-    this.y - 26 < player.y - 31 + player.height &&
-    this.height + this.y - 26 > player.y - 31) {
+    if (this.x + this.hitX < player.x + player.hitX + player.hitWidth &&
+        this.x + this.hitX + this.hitWidth > player.x + player.hitX &&
+        this.y < player.y + player.hitHeight &&
+        this.hitHeight + this.y > player.y) {
     // collision detected!
     return true;
   }
   return false;
 };
 
+
 //
 // Player class
 //
 
 var Player = function() {
-  //this.x = Math.floor(Math.random() * 5 + 0) * 101;
-  //this.y = 606 - 171 - 41;
-
   // target sprite dimensions (actual = 101 * 171)
-  this.width = 70;
-  this.height = 80;
+  this.hitWidth = 70;
+  this.hitHeight = 80;
+
+  // hit zone x offset for visible entity, enemy already centered in row y direction
+  this.hitX = 15;
+
   //this.score = 0;
   this.reset();
   this.sprite = 'images/char-boy.png';
@@ -119,25 +204,25 @@ Player.prototype.handleInput = function(keyPress){
   // want to move player by one tile in relevant direction
   // when player reaches water add 1 point and reset start
 
-  if (gameState.startScreen) {
+  if (game.startScreen) {
     switch (keyPress) {
       case 'space':
-      gameState.startScreen = false;
-      gameState.gameOn = true;
-      gameInfo.show = gameState.startScreen;
-      gameState.startNewGame();
+      game.startScreen = false;
+      game.gameOn = true;
+      gameInfo.show = game.startScreen;
+      game.startNewGame();
       break;
       default:
       return; // do nothing
     }
 
-  } else if (gameState.gameOver){
+  } else if (game.gameOver){
     switch (keyPress) {
       case 'space':
-      gameState.gameOver = false;
-      gameState.gameOn = true;
-      gameOverScreen.show = gameState.gameOver;
-      gameState.startNewGame();
+      game.gameOver = false;
+      game.gameOn = true;
+      gameOverScreen.show = game.gameOver;
+      game.startNewGame();
       break;
       case 'i':
       gameInfo.showScreen();
@@ -146,44 +231,44 @@ Player.prototype.handleInput = function(keyPress){
       return; // do nothing
     }
 
-  } else if (gameState.paused){
-    gameState.paused = false;
+  } else if (game.paused){
+    game.paused = false;
     gamePausedScreen.show = false;
   } else {
 
     switch (keyPress) {
       case 'space': // if implement game pause
-      gameState.paused = true;
+      game.paused = true;
       gamePausedScreen.show = true;
       break;
       case 'left':
-      if (this.x - 101 < 0) {
+      if (this.x - game.tileWidth < 0) {
         break;
       } else {
-        this.x -= 101;
+        this.x -= game.tileWidth;
         break;
       }
       case 'right':
-      if (this.x + 101 >= 505) {
+      if (this.x + game.tileWidth >= 505) {
         break;
       } else {
-        this.x += 101;
+        this.x += game.tileWidth;
         break;
       }
       case 'up':
-      if (this.y - 83 < 0) {
+      if (this.y - game.rowHeight < 0) {
         this.reset();
         scoreBoard.score ++;
         break;
       } else {
-        this.y -= 83;
+        this.y -= game.rowHeight;
         break;
       }
       case 'down':
-      if (this.y + 83 > 394) {
+      if (this.y + game.rowHeight > 394) {
         break;
       } else {
-        this.y += 83;
+        this.y += game.rowHeight;
         break;
       }
       default:
@@ -199,11 +284,13 @@ Player.prototype.reset = function(dt) {
   // col widths = 101
   // randomise col between 0 and 4.
   // Math.floor(Math.random() * (max - min + 1) + min);
-  // player StartY is grid height - sprite height - aesthetic offset = 394
-
-  this.x = Math.floor(Math.random() * 5 + 0) * 101;
-  this.y = 606 - 171 - 41;
+  // player Start Y is grid height - sprite height - aesthetic offset = 394
+  // this.offsetY = 21;
+  this.x = game.randomise(0, 4) * game.tileWidth;
+  this.y = (game.numRows - 1) * game.rowHeight - game.rowCenterY ;
 };
+
+
 
 //
 // GameScreen class
@@ -252,7 +339,7 @@ GameScreen.prototype.render = function () {
   if (this.show) {
     this.drawScreen(this.x, this.y, this.width, this.height);
     this.infoText();
-    gameState.paused = true;
+    game.paused = true;
   }
 };
 
@@ -284,7 +371,7 @@ GameScreen.prototype.drawScreen = function (x, y, width, height) {
 
 var GameInfo = function(){
   this.titleText = 'How To Play';
-  this.show = gameState.startScreen;
+  this.show = game.startScreen;
 };
 
 GameInfo.prototype = new GameScreen();
@@ -312,11 +399,11 @@ GameInfo.prototype.infoText = function () {
 };
 
 GameInfo.prototype.showScreen = function () {
-  gameState.gameOver = false;
-  gameState.gameOn = false;
+  game.gameOver = false;
+  game.gameOn = false;
   gameOverScreen.show = false;
-  gameState.startScreen = true;
-  this.show = gameState.startScreen;
+  game.startScreen = true;
+  this.show = game.startScreen;
   this.render();
 };
 
@@ -331,7 +418,7 @@ var GameOverScreen = function(){
   this.width = 455;
   this.height = 250;
   this.titleText = 'GAME OVER';
-  this.show = gameState.gameOver;
+  this.show = game.gameOver;
 };
 
 GameOverScreen.prototype = new GameScreen();
@@ -381,48 +468,6 @@ GamePausedScreen.prototype.infoText = function () {
   ctx.fillText('Spacebar to CONTINUE', this.width / 2 + 25, y += lineHeight);
 };
 
-//
-// GameState
-//
-
-var GameState = function(){
-  this.gameOn = false;
-  this.startScreen = true;
-  this.gameOver = false;
-  this.paused = true;
-};
-
-// isStartScreen
-// isGameOn
-// isPaused.... maybe
-
-GameState.prototype.isGameOver = function (gameOver) {
-  if (gameOver) {
-    this.gameOver = gameOver;
-    this.gameOn = false;
-    this.startScreen = false;
-    this.paused = true;
-    gameOverScreen.show = gameState.gameOver;
-  }
-};
-
-GameState.prototype.isPaused = function (pause) {
-  if (pause) {
-    this.gameOver = false;
-    this.gameOn = false;
-    this.startScreen = false;
-    this.paused = pause;
-    gamePausedScreen.show = this.paused;
-  }
-};
-
-GameState.prototype.startNewGame = function () {
-  this.playerLives = 3;
-  this.paused = false;
-  player = new Player();
-  scoreBoard = new ScoreBoard();
-  //this.lifeArray = [];
-};
 
 
 //
@@ -452,14 +497,14 @@ ScoreBoard.prototype.render = function () {
   // lives
   // heart image 101 x 171
   // main area from y = 40 to 141
-  // x is ok at 101
+  // x is ok at game.tileWidth
   // render at less than half size align right if possible
   // ctx.drawImage(image, dx, dy, dWidth, dHeight);
   var spriteHeart = Resources.get(this.sprite);
   var spriteWidth = spriteHeart.width * 0.4;
   var spriteHeight = spriteHeart.height * 0.4;
   // render one for each life
-  for (var i = 0; i < gameState.playerLives; i++) {
+  for (var i = 0; i < game.playerLives; i++) {
     //array[i] maybe i'll need an array of lives.
     ctx.drawImage(spriteHeart, this.lifeX + i * spriteWidth, this.lifeY, spriteWidth, spriteHeight);
     //console.log((505 - spriteWidth * 3) / 2);
@@ -472,41 +517,70 @@ ScoreBoard.prototype.render = function () {
 
 // Bling our player must collect
 var Bling = function() {
-
-  // sprite dimensions
-  this.width = 101;
-  this.height = 171;
-
+  // Draw the bling - smaller - it is huge!
   this.shrink = 0.6;
+
+  // size for bling when picked up
   this.shrinkMore = 0.3;
 
-  // bling to appear in random places (same rows as bugs)
-  this.x = Math.floor(Math.random() * 5 + 0) * 101 + (101 * (1 - this.shrink) / 2);
-  this.y = Math.floor(Math.random() * 3 + 1) * 83 - 10 + (171 * (1 - this.shrink) / 2);
+  // bling picked up and saved
+  this.picked = false;
+  this.saved = false;
 
-  // gem to time out
+  // sprite dimensions (might also work as hit dimensions)
+  if (this.picked) {
+    this.width = game.tileWidth * this.shrinkMore;
+    this.height = game.tileHeight * this.shrinkMore;
+  } else {
+    this.width = game.tileWidth * this.shrink;
+    this.height = game.tileHeight * this.shrink;
+  }
+
+  // offset to centre bling on tile
+  this.offsetX = (game.tileWidth - this.width) / 2;
+  //this.offsetY = (game.tileHeight - this.height) / 2;
+  // offsetY = 21 seems to work best again :)
+  // this.offsetY = 21;
+
+  // bling to appear in random places (same rows as bugs)
+  this.x = game.randomise(0, 4) * game.tileWidth + this.offsetX;
+  this.y = game.randomise(1, 3) * game.rowHeight + game.rowCenterY ;
+
+  // bling to time out or turn into imprenatable rock
 
   // select random gem from array - just one for now
-  this.sprite = 'images/gem-blue.png';
+
+  var colour = ['blue', 'green', 'orange'];
+  this.gem = 'images/gem-' + colour[Math.floor(Math.random() * 3)] + '.png';
 };
 
-// Draw the bling - smaller - it is huge!
+
 Bling.prototype.render = function() {
-  ctx.drawImage(Resources.get(this.sprite), this.x, this.y, this.width * this.shrink, this.height * this.shrink);
+  if (this.picked) {
+    console.log('collision: player at:' + player.x + 'bling at: ' + this.x);
+    ctx.drawImage(Resources.get(this.gem), player.x, player.y, this.width, this.height);
+  } else {
+    ctx.drawImage(Resources.get(this.gem), this.x, this.y, this.width, this.height);
+  }
+
+};
+
+Bling.prototype.update = function() {
+  // tbd
 };
 
 //
 // instantiate objects
 //
 
+var game = new Game();
 var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
 var player = new Player();
 var scoreBoard = new ScoreBoard();
-var gameState = new GameState();
 var gameInfo = new GameInfo();
 var gameOverScreen = new GameOverScreen();
 var gamePausedScreen = new GamePausedScreen();
-var bling = new Bling();
+var bling = [new Bling(), new Bling()];
 
 
 
