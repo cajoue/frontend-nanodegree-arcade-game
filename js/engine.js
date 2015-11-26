@@ -101,6 +101,7 @@ var Engine = (function(global) {
         bling.forEach(function(gem) {
             gem.update(dt);
         });
+        dropZone.update();
     }
 
     /* This function initially draws the "game level", it will then call
@@ -147,6 +148,7 @@ var Engine = (function(global) {
         gameInfo.render();
         gameOverScreen.render();
         gamePausedScreen.render();
+
     }
 
     /* This function is called by the render function and is called on each game
@@ -154,7 +156,7 @@ var Engine = (function(global) {
      * on your enemy and player entities within app.js
      */
     function renderEntities() {
-
+        dropZone.render();
         player.render();
         bling.forEach(function(gem) {
             gem.render();
@@ -165,6 +167,8 @@ var Engine = (function(global) {
         allEnemies.forEach(function(enemy) {
             enemy.render();
         });
+
+
 
 
 

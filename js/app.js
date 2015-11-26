@@ -305,7 +305,8 @@ var Bling = function() {
 
   // bling picked up and saved
   this.picked = false;
-  this.saved = false;
+  this.dropped = false;
+  this.delivered = false;
 
   // sprite dimensions (might also work as hit dimensions)
   this.width = game.tileWidth * this.shrink;
@@ -346,6 +347,8 @@ Bling.prototype.render = function() {
   if (this.picked) {
     //console.log('collision: player at:' + player.x + 'bling at: ' + this.x);
     ctx.drawImage(Resources.get(this.gem), player.x + this.pickX, player.y + this.pickY, this.pickWidth, this.pickHeight);
+  } else if (this.delivered) {
+    ctx.drawImage(Resources.get(this.gem), dropZone.x, dropZone.y, this.width, this.height);
   } else {
     ctx.drawImage(Resources.get(this.gem), this.x, this.y, this.width, this.height);
   }
@@ -354,7 +357,13 @@ Bling.prototype.render = function() {
 
 Bling.prototype.update = function() {
   if (this.checkCollisions()) {
-    this.picked = true;
+    if (this.picked){
+      dropZone.visible = true;
+    }
+    if (this.delivered) {
+      this.picked = false;
+      scoreBoard.score += 10;
+    }
   }
   //this.picked = false;
 };
@@ -365,17 +374,66 @@ Bling.prototype.update = function() {
 // will work with defined width and height as defined by shrink size before picked
 // hitHeight may have to be defined if too big
 Bling.prototype.checkCollisions = function() {
-  if (!this.picked) {
+  if (!this.picked && !this.dropped && !this.delivered) {
     if (this.x < player.x + player.hitX + player.hitWidth &&
-      this.x + this.width > player.x + player.hitX &&
-      this.y < player.y + player.hitHeight &&
-      this.hitHeight + this.y > player.y) {
-        // collision detected!
-        return true;
-      }
+        this.x + this.width > player.x + player.hitX &&
+        this.y < player.y + player.hitHeight &&
+        this.hitHeight + this.y > player.y) {
+      // collision detected!
+      this.picked = true;
+      return true;
     }
     return false;
-  };
+  } else if (this.picked && !this.dropped && !this.delivered) {
+    // case for dropped in dropZone - the selector tile to be implemented.
+      if (dropZone.x < player.x + player.hitX + player.hitWidth &&
+          dropZone.x + dropZone.width > player.x + player.hitX &&
+          dropZone.y < player.y + player.hitHeight &&
+          dropZone.height + dropZone.y > player.y) {
+        // collision detected!
+        this.delivered = true;
+        return true;
+      }
+
+    return false;
+  } else {
+    // case for picked up but hit by bug before reach drop zone
+    return false;
+  }
+};
+
+// drop bling
+Bling.prototype.drop = function (first_argument) {
+  // body...
+};
+
+//
+// DropZone class
+//
+
+var DropZone = function() {
+  // dropZone appears once a bling is picked up
+  // the gem needs to be delivered to the dropZone to earn points
+  this.visible = false;
+
+  // bling to appear in random places (grass rows)
+  this.x = game.randomise(0, 4) * game.tileWidth;
+  this.y = game.randomise(4, 5) * game.rowHeight + game.rowCenterY ;
+
+  this.width = game.tileWidth;
+  this.height = game.rowHeight;
+  this.sprite = 'images/Selector.png';
+};
+
+DropZone.prototype.render = function() {
+  if (this.visible) {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y, this.width, this.height);
+  }
+};
+
+DropZone.prototype.update = function() {
+  // tbd
+};
 
 
 //
@@ -610,6 +668,7 @@ var gameInfo = new GameInfo();
 var gameOverScreen = new GameOverScreen();
 var gamePausedScreen = new GamePausedScreen();
 var bling = [new Bling(), new Bling()];
+var dropZone = new DropZone();
 
 
 
