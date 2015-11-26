@@ -291,6 +291,92 @@ Player.prototype.reset = function(dt) {
 };
 
 
+//
+// Bling class
+//
+
+// Bling our player must collect
+var Bling = function() {
+  // Draw the bling - smaller - it is huge!
+  this.shrink = 0.6;
+
+  // size for bling when picked up
+  this.shrinkMore = 0.3;
+
+  // bling picked up and saved
+  this.picked = false;
+  this.saved = false;
+
+  // sprite dimensions (might also work as hit dimensions)
+  this.width = game.tileWidth * this.shrink;
+  this.height = game.tileHeight * this.shrink;
+
+  // sprite dimensions if (this.picked)
+  this.pickWidth = game.tileWidth * this.shrinkMore;
+  this.pickHeight = game.tileHeight * this.shrinkMore;
+
+  // offset to centre bling on tile
+  this.offsetX = (game.tileWidth - this.width) / 2;
+
+  // offset to position picked up bling
+  this.pickX = (game.tileWidth - this.pickWidth) / 2;
+  this.pickY = (this.height);
+
+  // hitHeight defined for collisions
+  this.hitHeight = 40;
+
+  //this.offsetY = (game.tileHeight - this.height) / 2;
+  // offsetY = 21 seems to work best again :)
+  // this.offsetY = 21;
+
+  // bling to appear in random places (same rows as bugs)
+  this.x = game.randomise(0, 4) * game.tileWidth + this.offsetX;
+  this.y = game.randomise(1, 3) * game.rowHeight + game.rowCenterY ;
+
+  // bling to time out or turn into imprenatable rock
+
+  // select random gem from array
+
+  var colour = ['blue', 'green', 'orange'];
+  this.gem = 'images/gem-' + colour[Math.floor(Math.random() * 3)] + '.png';
+};
+
+
+Bling.prototype.render = function() {
+  if (this.picked) {
+    //console.log('collision: player at:' + player.x + 'bling at: ' + this.x);
+    ctx.drawImage(Resources.get(this.gem), player.x + this.pickX, player.y + this.pickY, this.pickWidth, this.pickHeight);
+  } else {
+    ctx.drawImage(Resources.get(this.gem), this.x, this.y, this.width, this.height);
+  }
+
+};
+
+Bling.prototype.update = function() {
+  if (this.checkCollisions()) {
+    this.picked = true;
+  }
+  //this.picked = false;
+};
+
+// Even though bling is static, check for player bumping into it as it is an array item
+// based on enemy collisions
+// don't need hitX as already built into bling.x
+// will work with defined width and height as defined by shrink size before picked
+// hitHeight may have to be defined if too big
+Bling.prototype.checkCollisions = function() {
+  if (!this.picked) {
+    if (this.x < player.x + player.hitX + player.hitWidth &&
+      this.x + this.width > player.x + player.hitX &&
+      this.y < player.y + player.hitHeight &&
+      this.hitHeight + this.y > player.y) {
+        // collision detected!
+        return true;
+      }
+    }
+    return false;
+  };
+
 
 //
 // GameScreen class
@@ -511,63 +597,6 @@ ScoreBoard.prototype.render = function () {
   }
 };
 
-//
-// Bling class
-//
-
-// Bling our player must collect
-var Bling = function() {
-  // Draw the bling - smaller - it is huge!
-  this.shrink = 0.6;
-
-  // size for bling when picked up
-  this.shrinkMore = 0.3;
-
-  // bling picked up and saved
-  this.picked = false;
-  this.saved = false;
-
-  // sprite dimensions (might also work as hit dimensions)
-  if (this.picked) {
-    this.width = game.tileWidth * this.shrinkMore;
-    this.height = game.tileHeight * this.shrinkMore;
-  } else {
-    this.width = game.tileWidth * this.shrink;
-    this.height = game.tileHeight * this.shrink;
-  }
-
-  // offset to centre bling on tile
-  this.offsetX = (game.tileWidth - this.width) / 2;
-  //this.offsetY = (game.tileHeight - this.height) / 2;
-  // offsetY = 21 seems to work best again :)
-  // this.offsetY = 21;
-
-  // bling to appear in random places (same rows as bugs)
-  this.x = game.randomise(0, 4) * game.tileWidth + this.offsetX;
-  this.y = game.randomise(1, 3) * game.rowHeight + game.rowCenterY ;
-
-  // bling to time out or turn into imprenatable rock
-
-  // select random gem from array - just one for now
-
-  var colour = ['blue', 'green', 'orange'];
-  this.gem = 'images/gem-' + colour[Math.floor(Math.random() * 3)] + '.png';
-};
-
-
-Bling.prototype.render = function() {
-  if (this.picked) {
-    console.log('collision: player at:' + player.x + 'bling at: ' + this.x);
-    ctx.drawImage(Resources.get(this.gem), player.x, player.y, this.width, this.height);
-  } else {
-    ctx.drawImage(Resources.get(this.gem), this.x, this.y, this.width, this.height);
-  }
-
-};
-
-Bling.prototype.update = function() {
-  // tbd
-};
 
 //
 // instantiate objects
