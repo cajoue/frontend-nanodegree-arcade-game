@@ -364,7 +364,8 @@ Bling.prototype.render = function() {
 Bling.prototype.update = function() {
   if (this.checkCollisions()) {
     if (this.picked){
-      dropZone.visible = true;
+      //dropZone = new DropZone(); // a wee bit flaky
+      dropZone.show();
     }
     if (this.delivered) {
       this.picked = false;
@@ -394,7 +395,7 @@ Bling.prototype.checkCollisions = function() {
       return true;
     }
     return false;
-  } else if (this.picked && !this.dropped && !this.delivered) {
+  } else if (this.picked && !this.dropped && !this.delivered && dropZone.visible) {
     // case for dropped in dropZone - the selector tile to be implemented.
       if (dropZone.x < player.x + player.hitX + player.hitWidth &&
           dropZone.x + dropZone.width > player.x + player.hitX &&
@@ -402,6 +403,7 @@ Bling.prototype.checkCollisions = function() {
           dropZone.height + dropZone.y > player.y) {
         // collision detected!
         this.delivered = true;
+        dropZone.holdingBling = true;
         return true;
       }
 
@@ -412,7 +414,7 @@ Bling.prototype.checkCollisions = function() {
   }
 };
 
-// reset bling
+// reset bling - requires a timer function like the dropZone
 Bling.prototype.reset = function () {
     var i = bling.indexOf(this);
     if (i != -1) {
@@ -432,6 +434,12 @@ var DropZone = function() {
   // dropZone appears once a bling is picked up
   // the gem needs to be delivered to the dropZone to earn points
   this.visible = false;
+  this.showTime = 200; // for visibility timer
+  this.showCount = 0;
+  this.resetTime = 30; // for reset fade time
+  this.resetCount = 0;
+  this.holdingBling = false;
+  this.reset();
 
   // bling to appear in random places (grass rows)
   this.x = game.randomise(0, 4) * game.tileWidth;
@@ -449,11 +457,27 @@ DropZone.prototype.render = function() {
 };
 
 DropZone.prototype.update = function() {
-  // tbd
+  if (this.visible && !this.holdingBling && this.showCount > 0) {
+    this.showCount --;
+  } else if (this.visible && this.resetCount > 1) {
+    this.resetCount --;
+  } else if (this.visible && this.resetCount === 1) {
+    this.resetCount --;
+    dropZone = new DropZone();
+  } else {
+    this.visible = false;
+  }
 };
 
 DropZone.prototype.reset = function () {
-  this.visible = false;
+  this.resetCount = this.resetTime;
+//  this.visible = false;
+  this.showCount = this.showTime;
+};
+
+DropZone.prototype.show = function () {
+   this.visible = true;
+
 };
 
 //
