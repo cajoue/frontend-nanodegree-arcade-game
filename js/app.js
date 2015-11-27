@@ -57,6 +57,7 @@ Game.prototype.randomise = function (first, last) {
 };
 
 
+
 //
 // Enemy class
 //
@@ -297,13 +298,14 @@ Player.prototype.reset = function(dt) {
 
 // Bling our player must collect
 var Bling = function() {
+  // number of gems
+  this.minBling = 3;
+
   this.visible = true;
 
   // Draw the bling - smaller - it is huge!
   this.shrink = 0.6;
-
-  // size for bling when picked up
-  this.shrinkMore = 0.3;
+  this.shrinkMore = 0.3; // size for bling when picked up
 
   // bling picked up and saved
   this.picked = false;
@@ -313,14 +315,12 @@ var Bling = function() {
   // sprite dimensions (might also work as hit dimensions)
   this.width = game.tileWidth * this.shrink;
   this.height = game.tileHeight * this.shrink;
+  // offset to centre bling on tile
+  this.offsetX = (game.tileWidth - this.width) / 2;
 
   // sprite dimensions if (this.picked)
   this.pickWidth = game.tileWidth * this.shrinkMore;
   this.pickHeight = game.tileHeight * this.shrinkMore;
-
-  // offset to centre bling on tile
-  this.offsetX = (game.tileWidth - this.width) / 2;
-
   // offset to position picked up bling
   this.pickX = (game.tileWidth - this.pickWidth) / 2;
   this.pickY = (this.height);
@@ -337,10 +337,12 @@ var Bling = function() {
   this.y = game.randomise(1, 3) * game.rowHeight + game.rowCenterY ;
 
   // bling to time out or turn into imprenatable rock
+  this.showTime = 200; // for visibility timer
+  this.showCount = this.showTime;
+  this.resetTime = 20; // for reset fade time
+  this.resetCount = this.resetTime;
+  //this.reset();
 
-
-  // number of gems
-  this.minBling = 3;
 
   // select random gem from array
   // want greater number of blues to greens to oranges
@@ -363,22 +365,49 @@ Bling.prototype.render = function() {
 };
 
 Bling.prototype.update = function() {
+  // start checkCollisions
   if (this.checkCollisions()) {
+    // check collision to show dropZone when item picked up
     if (this.picked){
-      //dropZone = new DropZone(); // a wee bit flaky
       dropZone.show();
     }
+
+    // check collision to start release timer when item delivered to dropZone
+    // check collision to register delivered item and add to score
     if (this.delivered) {
       this.picked = false;
       scoreBoard.score += 10;
-      // want some sort of timer here
+      this.resetCount = this.resetTime;
+      console.log('bling.update picked and delivered timer just set: ' + this.resetCount)
+    }
+
+    // if is dropped (hit by bug or in water or dropZone timed out)
+    if (this.dropped) {
+      this.picked = false;
       dropZone.reset();
       this.reset();
+    }
+  } // end of checkCollisions
 
+  // start check timeout to release after delivery
+  if (this.delivered) {
+    console.log('bling.update delivered timer just set: ' + this.resetCount)
+    if (this.resetCount > 1) {
+      this.resetCount --;
+      console.log('bling.update delivered timer counting down' + this.resetCount)
+    } else if (this.resetCount === 1) {
+      console.log('bling.update delivered counter === 1')
+      this.resetCount --;
+      this.reset();
+    } else {
+      this.reset();
+      console.log('bling.update delivered regardless of timer')
     }
   }
-  //this.picked = false;
+
+  // TODO: introduce a random delay timer to display bling
 };
+
 
 // Even though bling is static, check for player bumping into it as it is an array item
 // based on enemy collisions
@@ -417,13 +446,27 @@ Bling.prototype.checkCollisions = function() {
 
 // reset bling - requires a timer function like the dropZone
 Bling.prototype.reset = function () {
+  this.resetCount = this.resetTime;
+  //this.showCount = this.showTime; // perhaps a delay appearance instead
+
+
     var i = bling.indexOf(this);
     if (i != -1) {
       bling.splice(i, 1);
-      if (bling.length < this.minBling) {
+      // if (bling.length < this.minBling) {
+      //   bling.push(new Bling());
+      // }
+
+      while (bling.length < this.minBling) {
         bling.push(new Bling());
       }
+
     }
+};
+
+
+Bling.prototype.show = function () {
+   this.visible = true;
 };
 
 
@@ -437,7 +480,7 @@ var DropZone = function() {
   this.visible = false;
   this.showTime = 200; // for visibility timer
   this.showCount = 0;
-  this.resetTime = 30; // for reset fade time
+  this.resetTime = 20; // for reset fade time
   this.resetCount = 0;
   this.holdingBling = false;
   this.reset();
@@ -478,7 +521,6 @@ DropZone.prototype.reset = function () {
 
 DropZone.prototype.show = function () {
    this.visible = true;
-
 };
 
 //
