@@ -1,6 +1,6 @@
-//
+//************************
 // Game
-//
+//************************
 
 // it's getting a little muddied up so want to declare some constants and
 // resuable functions - should make things easier to read later.
@@ -14,14 +14,17 @@ var Game = function(){
   this.tileWidth = 101;
   this.tileHeight = 171;
   this.rowHeight = 83;
-  this.rowCenterY = 21;
+  this.rowCenterY = 21; // offset so that bugs run in centre of row
   this.numRows = 6;
   this.numCols = 5;
+  this.minBling = 3; // number of gems in play
 };
 
-// isStartScreen
-// isGameOn
+//------------------------
+// Game.isGameOver()
+//------------------------
 
+// all lives lost and game is over
 Game.prototype.isGameOver = function (gameOver) {
   if (gameOver) {
     this.gameOver = gameOver;
@@ -32,6 +35,11 @@ Game.prototype.isGameOver = function (gameOver) {
   }
 };
 
+//------------------------
+// Game.isPaused(pause)
+//------------------------
+
+// spacebar has been pressed to pause game
 Game.prototype.isPaused = function (pause) {
   if (pause) {
     this.gameOver = false;
@@ -42,6 +50,11 @@ Game.prototype.isPaused = function (pause) {
   }
 };
 
+//------------------------
+// Game.startNewGame()
+//------------------------
+
+// Start a new game
 Game.prototype.startNewGame = function () {
   this.playerLives = 3;
   this.paused = false;
@@ -49,60 +62,47 @@ Game.prototype.startNewGame = function () {
   scoreBoard = new ScoreBoard();
 };
 
+//------------------------
+// Game.randomise(first, last)
+//------------------------
+
+// Random number generator within a specified range
 Game.prototype.randomise = function (first, last) {
-  // Random number generator within a specified range
   var randomNum = Math.floor(Math.random() * (last - first + 1) + first);
   return randomNum;
 };
 
 
-
-//
+//************************
 // Enemy class
-//
+//************************
 
 // Enemies our player must avoid
 var Enemy = function() {
-  // Variables applied to each of our instances go here,
-  // we've provided one for you to get started
-
-  // The image/sprite for our enemies, this uses
-  // a helper we've provided to easily load images
-
   // all bugs enter from left off canvas
   this.x = - game.tileWidth;
-
-  // aesthetic offset - is now game.rowCenterY
-  // this.offsetY = 21;
-
-  // randomise row between 1 and 3. Math.floor(Math.random()*(max-min+1)+min);
-  // stone row heights = 83 centre is 42
-  // offset y so that bug runs centrally 21 works...
-
-  //this.y = Math.floor(Math.random() * 3 + 1) * 83 - 21;
+  // bugs run in random row
   this.y = game.randomise(1, 3) * game.rowHeight - game.rowCenterY ;
 
   // tile size if necessary
    this.width = game.tileWidth;
    this.height = game.tileHeight;
 
-  // sprite target dimensions (actual = 101 * 171) (x from 11 to 87, y from 87 to 131)
-
+  // sprite target dimensions (visible part of tile)
   this.hitWidth = 75;
-  this.hitHeight = 44; // required for depth of bug
-
-  // hit zone x offset for visible entity, enemy already centered in row y direction
-  this.hitX = 11;
+  this.hitHeight = 44;  // required for depth of bug
+  this.hitX = 11;       // x offset for visible part of tile
 
   // bug speed - want randomised 3, slow (1), med(2), fast(3)
-
-  var minSpeed = 100;
-  //var maxSpeed = 256;
-  //this.speed = Math.floor(Math.random()*(maxSpeed - minSpeed + 1) + minSpeed);
+  var minSpeed = 100; // may increase if implement levels
   this.speed = game.randomise(1, 3) * minSpeed;
 
   this.sprite = 'images/enemy-bug.png';
 };
+
+//------------------------
+// Enemy.update(dt)
+//------------------------
 
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
@@ -110,59 +110,56 @@ Enemy.prototype.update = function(dt) {
   // You should multiply any movement by the dt parameter
   // which will ensure the game runs at the same speed for
   // all computers.
+
   // the new x position = old x + distance traveled in timeframe
   this.x = this.x + this.speed * dt;
+
+  // checkCollisions to see if hit player TODO: or player carrying gem
   if (this.checkCollisions()) {
-    game.playerLives --;
-    if (game.playerLives === 0) {
+    game.playerLives --;            // lose a life
+    if (game.playerLives === 0) {   // gameOver
       return game.isGameOver(true);
     }
-    scoreBoard.score --;
-    player.reset();
-    this.x = this.reset();
-
+    scoreBoard.score --;            // lose a point
+    player.reset();                 // reset player
+    this.x = this.reset();          // reset this bug
   }
-  if (this.x > 505) {
+  if (this.x > 505) {               // if out of bounds reset bug
     this.x = this.reset();
   }
 };
+
+//------------------------
+// Enemy.render()
+//------------------------
 
 // Draw the enemy on the screen, required method for game
 Enemy.prototype.render = function() {
   ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
+//------------------------
+// Enemy.reset()
+//------------------------
+
 // Enemy reset. delete from array once off screen
-// if enemies less than specific number create new one.
 Enemy.prototype.reset = function() {
-  var minEnemies = 3;
-  var i = allEnemies.indexOf(this);
+  var minEnemies = 3;                     // may increase if implement levels
+  var i = allEnemies.indexOf(this);       // find this instance of bug
   if (i != -1) {
-    allEnemies.splice(i, 1);
+    allEnemies.splice(i, 1);              // delete it
     if (allEnemies.length < minEnemies) {
-      allEnemies.push(new Enemy());
+      allEnemies.push(new Enemy());       // push new bug to array
     }
   }
 };
 
 
+//------------------------
+// Enemy.checkCollisions()
+//------------------------
+
 //Enemy.prototype.checkCollisions = function(x, y, w, h, x2, y2, w2, h2) {};
-
-// old
-
-// Enemy.prototype.checkCollisions = function() {
-//   if (this.x < player.x + 15 + player.width &&
-//     this.x + this.width > player.x + 15 &&
-//     this.y - 26 < player.y - 31 + player.height &&
-//     this.height + this.y - 26 > player.y - 31) {
-//     // collision detected!
-//     return true;
-//   }
-//   return false;
-// };
-
-
-// new
 Enemy.prototype.checkCollisions = function() {
     if (this.x + this.hitX < player.x + player.hitX + player.hitWidth &&
         this.x + this.hitX + this.hitWidth > player.x + player.hitX &&
@@ -175,36 +172,44 @@ Enemy.prototype.checkCollisions = function() {
 };
 
 
-//
+//************************
 // Player class
-//
+//************************
 
 var Player = function() {
-  // target sprite dimensions (actual = 101 * 171)
+  // target sprite dimensions (visible area)
   this.hitWidth = 70;
   this.hitHeight = 80;
-
-  // hit zone x offset for visible entity, enemy already centered in row y direction
-  this.hitX = 15;
-
-  this.dropsBling = false;
-
-  this.reset();
-  this.sprite = 'images/char-boy.png';
+  this.hitX = 15;     // x offset for visible area
+  this.reset();       // setting for new player
+  this.sprite = 'images/char-boy.png';  // may change if implement levels
 };
+
+//------------------------
+// Player.update()
+//------------------------
 
 Player.prototype.update = function() {
   // tbd
 };
 
+//------------------------
+// Player.render()
+//------------------------
+
 Player.prototype.render = function(){
   ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
+//------------------------
+// Player.handleInput(keyPress)
+//------------------------
+
 Player.prototype.handleInput = function(keyPress){
   // want to move player by one tile in relevant direction
-  // when player reaches water add 1 point and reset start
+  // when player reaches water add 1 point and reset start position
 
+  // press spacebar to startNewGame from startScreen
   if (game.startScreen) {
     switch (keyPress) {
       case 'space':
@@ -217,6 +222,7 @@ Player.prototype.handleInput = function(keyPress){
       return; // do nothing
     }
 
+  // press spacebar to startNewGame from gameOverScreen
   } else if (game.gameOver){
     switch (keyPress) {
       case 'space':
@@ -225,6 +231,8 @@ Player.prototype.handleInput = function(keyPress){
       gameOverScreen.show = game.gameOver;
       game.startNewGame();
       break;
+
+      // press i to show startScreen information from gameOverScreen
       case 'i':
       gameInfo.showScreen();
       break;
@@ -232,40 +240,41 @@ Player.prototype.handleInput = function(keyPress){
       return; // do nothing
     }
 
+  // press spacebar to unpause game from gamePausedScreen
   } else if (game.paused){
     game.paused = false;
     gamePausedScreen.show = false;
   } else {
 
     switch (keyPress) {
-      case 'space': // if implement game pause
+      case 'space':       // to pause game
       game.paused = true;
       gamePausedScreen.show = true;
       break;
-      case 'left':
+      case 'left':        // to move left in bounds
       if (this.x - game.tileWidth < 0) {
         break;
       } else {
         this.x -= game.tileWidth;
         break;
       }
-      case 'right':
+      case 'right':       // to move right in bounds
       if (this.x + game.tileWidth >= 505) {
         break;
       } else {
         this.x += game.tileWidth;
         break;
       }
-      case 'up':
+      case 'up':          // to move up in bounds, reach water, reset position
       if (this.y - game.rowHeight < 0) {
         this.reset();
-        scoreBoard.score ++;
+        scoreBoard.score ++;  // reached water add a point to score
         break;
       } else {
         this.y -= game.rowHeight;
         break;
       }
-      case 'down':
+      case 'down':       // to move down in bounds
       if (this.y + game.rowHeight > 394) {
         break;
       } else {
@@ -278,45 +287,54 @@ Player.prototype.handleInput = function(keyPress){
   }
 };
 
+//------------------------
+// Player.reset(dt)
+//------------------------
+
 Player.prototype.reset = function(dt) {
-  // if reach water reset with same player
-  // moved setting x and y position here.
-  // sprite height = 171
-  // col widths = 101
-  // randomise col between 0 and 4.
-  // Math.floor(Math.random() * (max - min + 1) + min);
-  // player Start Y is grid height - sprite height - aesthetic offset = 394
-  // this.offsetY = 21;
+  // interact with gems
+  this.hasBling = false;   // set true when carry bling
+  this.dropsBling = false; // mostly false, lose bling if dropZone times out
+
+  // randomise start position and centre in tile
   this.x = game.randomise(0, 4) * game.tileWidth;
-  this.y = (game.numRows - 1) * game.rowHeight - game.rowCenterY ;
+  this.y = (game.numRows - 1) * game.rowHeight - game.rowCenterY;
 };
 
 
-//
+//************************
 // Bling class
-//
+//************************
 
 // Bling our player must collect
 var Bling = function() {
-  // number of gems
-  this.minBling = 3;
-
+  // initial state of bling // TODO: maybe create an initiate method
   this.visible = false;
+  this.shrink = 0.6;      // Draw the bling - smaller - it is huge!
+  this.shrinkMore = 0.3;  // size for bling when picked up
 
-  // Draw the bling - smaller - it is huge!
-  this.shrink = 0.6;
-  this.shrinkMore = 0.3; // size for bling when picked up
-
-  // bling picked up and saved
+  // bling picked up, dropped, delivered, collected
   this.picked = false;
   this.dropped = false;
   this.delivered = false;
+  this.collected = false;     // if implement levels
+
+  // delay appearance of bling
+  this.delayMin = 20;
+  this.delayMax = 200;
+  this.delayCount = game.randomise(this.delayMin,this.delayMax);
+  // for reset after delivery - fade time shorter than dropzone fade
+  this.resetTime = 15;
+  this.resetCount = this.resetTime;
+  //this.reset();
 
   // sprite dimensions (might also work as hit dimensions)
   this.width = game.tileWidth * this.shrink;
   this.height = game.tileHeight * this.shrink;
   // offset to centre bling on tile
   this.offsetX = (game.tileWidth - this.width) / 2;
+  // hitHeight defined for collisions with player
+  this.hitHeight = 40;
 
   // sprite dimensions if (this.picked)
   this.pickWidth = game.tileWidth * this.shrinkMore;
@@ -325,58 +343,54 @@ var Bling = function() {
   this.pickX = (game.tileWidth - this.pickWidth) / 2;
   this.pickY = (this.height);
 
-  // hitHeight defined for collisions
-  this.hitHeight = 40;
-
-  //this.offsetY = (game.tileHeight - this.height) / 2;
-  // offsetY = 21 seems to work best again :)
-  // this.offsetY = 21;
-
   // bling to appear in random places (same rows as bugs)
   this.x = game.randomise(0, 4) * game.tileWidth + this.offsetX;
   this.y = game.randomise(1, 3) * game.rowHeight + game.rowCenterY ;
 
-  // bling to time out or turn into imprenatable rock
-
-  // delay appearance of bling
-  this.delayMin = 20;
-  this.delayMax = 200;
-  this.delayCount = game.randomise(this.delayMin,this.delayMax);
-  this.resetTime = 15; // for reset after delivery - fade time shorter than dropzone fade
-  this.resetCount = this.resetTime;
-  //this.reset();
-
-
   // select random gem from array
   // want greater number of blues to greens to oranges
-  // in case I implement some levels
   var colour = ['blue', 'blue', 'blue', 'green', 'green', 'orange'];
   this.gem = 'images/gem-' + colour[game.randomise(0, 5)] + '.png';
+
+  // ideas: //
+  // bling to time out (kind of does as is linked to dropZone)
+  // or turn into impenetrable rock blocking part of grid
 };
 
+//------------------------
+// Bling.render()
+//------------------------
 
 Bling.prototype.render = function() {
+  // render when made visible after initial delay
   if (this.visible) {
     if (this.picked) {
+      // player carries smallest gem size
       ctx.drawImage(Resources.get(this.gem), player.x + this.pickX, player.y + this.pickY, this.pickWidth, this.pickHeight);
     } else if (this.delivered) {
+      // gem takes the player location as its own position
       ctx.drawImage(Resources.get(this.gem), dropZone.x + this.offsetX, dropZone.y, this.width, this.height);
     } else {
+      // regular state
       ctx.drawImage(Resources.get(this.gem), this.x, this.y, this.width, this.height);
     }
   }
 };
 
+//------------------------
+// Bling.update()
+//------------------------
+
 Bling.prototype.update = function() {
-  // start checkCollisions
+  // begin checkCollisions
   if (this.checkCollisions()) {
-    // check collision to show dropZone when item picked up
+    // checkCollisions interaction with player - picked
     if (this.picked){
       dropZone.show();
     }
-
-    // check collision to start release timer when item delivered to dropZone
-    // check collision to register delivered item and add to score
+    // checkCollisions interaction with dropZone - delivered
+    // start resetTime, increase score, set picked to false,
+    // TODO: ?? set delivered to false ??
     if (this.delivered) {
       this.picked = false;
       scoreBoard.score += 10;
@@ -388,10 +402,11 @@ Bling.prototype.update = function() {
       this.picked = false;
       dropZone.reset();
       this.reset();
+      console.log('bling.update: checkCollisions true: dropped: true');
     }
-  } // end of checkCollisions
+  } // end checkCollisions
 
-  // start check timeout to release after delivery
+  // start check timeout to release gem after delivery (it just looks nicer)
   if (this.delivered) {
     if (this.resetCount > 1) {
       this.resetCount --;
@@ -403,7 +418,7 @@ Bling.prototype.update = function() {
     }
   }
 
-  // a random delay timer to display bling
+  // timer to display bling after a random delay
   if (!this.visible && this.delayCount > 0) {
     this.delayCount --;
   } else {
@@ -416,17 +431,16 @@ Bling.prototype.update = function() {
     this.picked = false;
     dropZone.reset();
     this.reset();
-    console.log('bling player drops bling and dropZone and gem reset');
+    console.log('bling.update: bling.picked && player.dropsBling');
     player.dropsBling = false;
   }
 };
 
-
+//------------------------
+// Bling.checkCollisions()
+//------------------------
+//TODO: rework this code into cases
 // Even though bling is static, check for player bumping into it as it is an array item
-// based on enemy collisions
-// don't need hitX as already built into bling.x
-// will work with defined width and height as defined by shrink size before picked
-// hitHeight may have to be defined if too big
 Bling.prototype.checkCollisions = function() {
   if (!this.picked && !this.dropped && !this.delivered) {
     if (this.x < player.x + player.hitX + player.hitWidth &&
@@ -457,45 +471,46 @@ Bling.prototype.checkCollisions = function() {
   }
 };
 
-// reset bling - requires a timer function like the dropZone
+//------------------------
+// Bling.reset()
+//------------------------
+
 Bling.prototype.reset = function () {
-  this.resetCount = this.resetTime;
-  //this.showCount = this.showTime; // perhaps a delay appearance instead
+  // find index of this instance and delete it
+  var i = bling.indexOf(this);
+  if (i != -1) {
+    bling.splice(i, 1);
 
-
-    var i = bling.indexOf(this);
-    if (i != -1) {
-      bling.splice(i, 1);
-      // if (bling.length < this.minBling) {
-      //   bling.push(new Bling());
-      // }
-
-      while (bling.length < this.minBling) {
-        bling.push(new Bling());
-      }
-
+  // keep the bling array topped up with new bling
+    while (bling.length < game.minBling) {
+      bling.push(new Bling());
     }
+  }
 };
 
+//------------------------
+// Bling.show()
+//------------------------
 
 Bling.prototype.show = function () {
    this.visible = true;
 };
 
 
-//
+//************************
 // DropZone class
-//
+//************************
 
 var DropZone = function() {
   // dropZone appears once a bling is picked up
-  // the gem needs to be delivered to the dropZone to earn points
+  // deliver gem to dropZone before it disappears to earn points
+  // initial states
   this.visible = false;
   this.showTime = 200; // for visibility timer
   this.showCount = 0;
   this.resetTime = 20; // for reset fade time
   this.resetCount = 0;
-  this.holdingBling = false;
+  this.holdingBling = false; // true when bling delivered here
   this.reset();
 
   // bling to appear in random places (grass rows)
@@ -507,11 +522,19 @@ var DropZone = function() {
   this.sprite = 'images/Selector.png';
 };
 
+//------------------------
+// DropZone.render()
+//------------------------
+
 DropZone.prototype.render = function() {
   if (this.visible) {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y, this.width, this.height);
   }
 };
+
+//------------------------
+// DropZone.update()
+//------------------------
 
 DropZone.prototype.update = function() {
   // visibility from gem pickup to delivery or timeout
@@ -519,11 +542,12 @@ DropZone.prototype.update = function() {
     this.showCount --;
 
     // if player doesn't reach dropZone in time
+    // TODO: rename holdingBling to dropReceived
   } else if (this.visible && !this.holdingBling && this.showCount === 1) {
     player.dropsBling = true;
     this.showCount --;
     dropZone = new DropZone();
-    console.log('dropZone player drops bling and dropZone reset');
+    console.log('dropZone.update: this.visible && !this.holdingBling && this.showCount === 1 > player drops bling and dropZone reset');
 
     // fade out time from delivery to reset dropZone
   } else if (this.visible && this.resetCount > 1) {
@@ -533,53 +557,49 @@ DropZone.prototype.update = function() {
   } else if (this.visible && this.resetCount === 1) {
     this.resetCount --;
     dropZone = new DropZone();
-    console.log('dropZone player delivers bling and dropZone reset');
+    console.log('dropZone.update: this.visible && this.resetCount === 1 > dropZone reset');
     // not visible
   } else {
     this.visible = false;
   }
 };
 
+//------------------------
+// DropZone.reset()
+//------------------------
+// TODO: ?? maybe just do new instance ??
 DropZone.prototype.reset = function () {
   this.resetCount = this.resetTime;
-//  this.visible = false;
   this.showCount = this.showTime;
 };
+
+//------------------------
+// DropZone.show()
+//------------------------
 
 DropZone.prototype.show = function () {
    this.visible = true;
 };
 
-//
+
+//************************
 // GameScreen class
-//
+//************************
 
 // I'm going to try inheritance on this one
 // child screens: GameInfo, GameOverScreen
 // based on Stack Overflow answer from Juan Mendes
 // http://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
-/**
+/*
 * Draws a rounded rectangle using the current state of the canvas.
 * If you omit the last three params, it will draw a rectangle
 * outline with a 5 pixel border radius
-* @param {CanvasRenderingContext2D} ctx
-* @param {Number} x The top left x coordinate
-* @param {Number} y The top left y coordinate
-* @param {Number} width The width of the rectangle
-* @param {Number} height The height of the rectangle
-* @param {Number} [radius = 5] The corner radius; It can also be an object
-*                 to specify different radii for corners
-* @param {Number} [radius.tl = 0] Top left
-* @param {Number} [radius.tr = 0] Top right
-* @param {Number} [radius.br = 0] Bottom right
-* @param {Number} [radius.bl = 0] Bottom left
-* @param {Boolean} [fill = false] Whether to fill the rectangle.
-* @param {Boolean} [stroke = true] Whether to stroke the rectangle.
 */
 
-//
+
+//************************
 // GameScreen message template
-//
+//************************
 
 var GameScreen = function() {
   // match size and position of initial game screen
@@ -590,8 +610,11 @@ var GameScreen = function() {
   this.height = 536;
 
   this.show = false;
-
 };
+
+//------------------------
+// GameScreen.render()
+//------------------------
 
 GameScreen.prototype.render = function () {
   if (this.show) {
@@ -601,6 +624,11 @@ GameScreen.prototype.render = function () {
   }
 };
 
+//------------------------
+// GameScreen.drawScreen(x, y, width, height)
+//------------------------
+
+// draws rounded rectangle of given size
 GameScreen.prototype.drawScreen = function (x, y, width, height) {
   var radius = 10;
 
@@ -623,16 +651,26 @@ GameScreen.prototype.drawScreen = function (x, y, width, height) {
   ctx.stroke();
 };
 
-//
-// Game Information Screen
-//
 
+//************************
+// Game Information Screen
+//************************
+
+// this is the information startScreen
 var GameInfo = function(){
   this.titleText = 'How To Play';
   this.show = game.startScreen;
 };
 
+//------------------------
+// GameInfo.constructor()
+//------------------------
+
 GameInfo.prototype = new GameScreen();
+
+//------------------------
+// GameInfo.infoText()
+//------------------------
 
 GameInfo.prototype.infoText = function () {
   var y = this.y;
@@ -656,6 +694,10 @@ GameInfo.prototype.infoText = function () {
   ctx.fillText('Spacebar to PLAY or PAUSE', this.width / 2, y += lineHeight);
 };
 
+//------------------------
+// GameInfo.showScreen()
+//------------------------
+
 GameInfo.prototype.showScreen = function () {
   game.gameOver = false;
   game.gameOn = false;
@@ -666,9 +708,9 @@ GameInfo.prototype.showScreen = function () {
 };
 
 
-//
+//************************
 // Game Over Screen
-//
+//************************
 
 var GameOverScreen = function(){
   this.x = 25;
@@ -679,7 +721,15 @@ var GameOverScreen = function(){
   this.show = game.gameOver;
 };
 
+//------------------------
+// GameOverScreen.constructor()
+//------------------------
+
 GameOverScreen.prototype = new GameScreen();
+
+//------------------------
+// GameOverScreen.infoText()
+//------------------------
 
 GameOverScreen.prototype.infoText = function () {
   var y = this.y;
@@ -696,9 +746,10 @@ GameOverScreen.prototype.infoText = function () {
   ctx.fillText('Spacebar to RESTART', this.width / 2 + 25, y += lineHeight);
 };
 
-//
+
+//************************
 // Game Paused Screen
-//
+//************************
 
 var GamePausedScreen = function(){
   this.x = 25;
@@ -709,7 +760,15 @@ var GamePausedScreen = function(){
   this.show = false;
 };
 
+//------------------------
+// GamePausedScreen.constructor()
+//------------------------
+
 GamePausedScreen.prototype = new GameScreen();
+
+//------------------------
+// GamePausedScreen.infoText()
+//------------------------
 
 GamePausedScreen.prototype.infoText = function () {
   var y = this.y;
@@ -720,28 +779,27 @@ GamePausedScreen.prototype.infoText = function () {
   ctx.fillStyle = 'white';
   ctx.fillText(this.titleText, this.width / 2 + 25, y += lineExtraHeight);
   ctx.font = '24pt Wendy One';
-  //ctx.fillText('Your Score: ' + scoreBoard.score, this.width / 2, y += lineHeight);
   ctx.fillStyle = 'rgb(128, 0, 64)';
-  //ctx.fillText('Press i for Info', this.width / 2 + 25, y += lineHeight);
   ctx.fillText('Spacebar to CONTINUE', this.width / 2 + 25, y += lineHeight);
 };
 
 
-
-//
+//************************
 // scoreboard
-//
-
-// feel need to separate the scoreboard from the player
+//************************
 
 var ScoreBoard = function(){
   this.x = 10;
-  this.lifeX = 192; // to centre on screen based on 3 lives
+  this.lifeX = 200; // to centre on screen based on 3 lives
   this.y = 40;
   this.lifeY = -10; // to take account of blank space at top
   this.score = 0;
   this.sprite = 'images/Heart.png';
 };
+
+//------------------------
+// ScoreBoard.render()
+//------------------------
 
 ScoreBoard.prototype.render = function () {
   // scoreboard
@@ -752,26 +810,20 @@ ScoreBoard.prototype.render = function () {
   ctx.textAlign = 'left';
   ctx.fillText('Score: ' + this.score, this.x, this.y);
 
-  // lives
-  // heart image 101 x 171
-  // main area from y = 40 to 141
-  // x is ok at game.tileWidth
-  // render at less than half size align right if possible
-  // ctx.drawImage(image, dx, dy, dWidth, dHeight);
+  // show lives remaining
   var spriteHeart = Resources.get(this.sprite);
   var spriteWidth = spriteHeart.width * 0.4;
   var spriteHeight = spriteHeart.height * 0.4;
   // render one for each life
   for (var i = 0; i < game.playerLives; i++) {
-    //array[i] maybe i'll need an array of lives.
     ctx.drawImage(spriteHeart, this.lifeX + i * spriteWidth, this.lifeY, spriteWidth, spriteHeight);
   }
 };
 
 
-//
+//************************
 // instantiate objects
-//
+//************************
 
 var game = new Game();
 var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
@@ -784,7 +836,9 @@ var bling = [new Bling(), new Bling()];
 var dropZone = new DropZone();
 
 
-
+//************************
+// event listener
+//************************
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
