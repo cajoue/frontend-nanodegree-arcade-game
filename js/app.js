@@ -340,12 +340,13 @@ var Bling = function() {
 
 
   // number of gems
-  this.minBling = 2;
+  this.minBling = 3;
 
   // select random gem from array
-
-  var colour = ['blue', 'green', 'orange'];
-  this.gem = 'images/gem-' + colour[Math.floor(Math.random() * 3)] + '.png';
+  // want greater number of blues to greens to oranges
+  // in case I implement some levels
+  var colour = ['blue', 'blue', 'blue', 'green', 'green', 'orange'];
+  this.gem = 'images/gem-' + colour[game.randomise(0, 5)] + '.png';
 };
 
 
