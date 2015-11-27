@@ -301,7 +301,7 @@ var Bling = function() {
   // number of gems
   this.minBling = 3;
 
-  this.visible = true;
+  this.visible = false;
 
   // Draw the bling - smaller - it is huge!
   this.shrink = 0.6;
@@ -337,9 +337,12 @@ var Bling = function() {
   this.y = game.randomise(1, 3) * game.rowHeight + game.rowCenterY ;
 
   // bling to time out or turn into imprenatable rock
-  this.showTime = 200; // for visibility timer
-  this.showCount = this.showTime;
-  this.resetTime = 20; // for reset fade time
+
+  // delay appearance of bling
+  this.delayMin = 20;
+  this.delayMax = 200;
+  this.delayCount = game.randomise(this.delayMin,this.delayMax);
+  this.resetTime = 20; // for reset after delivery fade time
   this.resetCount = this.resetTime;
   //this.reset();
 
@@ -353,15 +356,16 @@ var Bling = function() {
 
 
 Bling.prototype.render = function() {
-  if (this.picked) {
-    //console.log('collision: player at:' + player.x + 'bling at: ' + this.x);
-    ctx.drawImage(Resources.get(this.gem), player.x + this.pickX, player.y + this.pickY, this.pickWidth, this.pickHeight);
-  } else if (this.delivered) {
-    ctx.drawImage(Resources.get(this.gem), dropZone.x + this.offsetX, dropZone.y, this.width, this.height);
-  } else {
-    ctx.drawImage(Resources.get(this.gem), this.x, this.y, this.width, this.height);
+  if (this.visible) {
+    if (this.picked) {
+      //console.log('collision: player at:' + player.x + 'bling at: ' + this.x);
+      ctx.drawImage(Resources.get(this.gem), player.x + this.pickX, player.y + this.pickY, this.pickWidth, this.pickHeight);
+    } else if (this.delivered) {
+      ctx.drawImage(Resources.get(this.gem), dropZone.x + this.offsetX, dropZone.y, this.width, this.height);
+    } else {
+      ctx.drawImage(Resources.get(this.gem), this.x, this.y, this.width, this.height);
+    }
   }
-
 };
 
 Bling.prototype.update = function() {
@@ -378,9 +382,9 @@ Bling.prototype.update = function() {
       this.picked = false;
       scoreBoard.score += 10;
       this.resetCount = this.resetTime;
-      console.log('bling.update picked and delivered timer just set: ' + this.resetCount)
+      //console.log('bling.update picked and delivered timer just set: ' + this.resetCount)
     }
-
+    // TODO:
     // if is dropped (hit by bug or in water or dropZone timed out)
     if (this.dropped) {
       this.picked = false;
@@ -391,21 +395,29 @@ Bling.prototype.update = function() {
 
   // start check timeout to release after delivery
   if (this.delivered) {
-    console.log('bling.update delivered timer just set: ' + this.resetCount)
+    //console.log('bling.update delivered timer just set: ' + this.resetCount)
     if (this.resetCount > 1) {
       this.resetCount --;
-      console.log('bling.update delivered timer counting down' + this.resetCount)
+      //console.log('bling.update delivered timer counting down' + this.resetCount)
     } else if (this.resetCount === 1) {
-      console.log('bling.update delivered counter === 1')
+      //console.log('bling.update delivered counter === 1')
       this.resetCount --;
       this.reset();
     } else {
       this.reset();
-      console.log('bling.update delivered regardless of timer')
+      //console.log('bling.update delivered regardless of timer')
     }
   }
 
   // TODO: introduce a random delay timer to display bling
+  if (!this.visible && this.delayCount > 0) {
+    this.delayCount --;
+    console.log(this.visible + ' delayCount: ' + this.delayCount);
+  } else {
+    this.visible = true;
+    console.log(this.visible);
+  }
+
 };
 
 
