@@ -21,7 +21,6 @@ var Game = function(){
 
 // isStartScreen
 // isGameOn
-// isPaused.... maybe
 
 Game.prototype.isGameOver = function (gameOver) {
   if (gameOver) {
@@ -188,7 +187,8 @@ var Player = function() {
   // hit zone x offset for visible entity, enemy already centered in row y direction
   this.hitX = 15;
 
-  //this.score = 0;
+  this.dropsBling = false;
+
   this.reset();
   this.sprite = 'images/char-boy.png';
 };
@@ -342,7 +342,7 @@ var Bling = function() {
   this.delayMin = 20;
   this.delayMax = 200;
   this.delayCount = game.randomise(this.delayMin,this.delayMax);
-  this.resetTime = 20; // for reset after delivery fade time
+  this.resetTime = 15; // for reset after delivery - fade time shorter than dropzone fade
   this.resetCount = this.resetTime;
   //this.reset();
 
@@ -358,7 +358,6 @@ var Bling = function() {
 Bling.prototype.render = function() {
   if (this.visible) {
     if (this.picked) {
-      //console.log('collision: player at:' + player.x + 'bling at: ' + this.x);
       ctx.drawImage(Resources.get(this.gem), player.x + this.pickX, player.y + this.pickY, this.pickWidth, this.pickHeight);
     } else if (this.delivered) {
       ctx.drawImage(Resources.get(this.gem), dropZone.x + this.offsetX, dropZone.y, this.width, this.height);
@@ -382,7 +381,6 @@ Bling.prototype.update = function() {
       this.picked = false;
       scoreBoard.score += 10;
       this.resetCount = this.resetTime;
-      //console.log('bling.update picked and delivered timer just set: ' + this.resetCount)
     }
     // TODO:
     // if is dropped (hit by bug or in water or dropZone timed out)
@@ -395,29 +393,32 @@ Bling.prototype.update = function() {
 
   // start check timeout to release after delivery
   if (this.delivered) {
-    //console.log('bling.update delivered timer just set: ' + this.resetCount)
     if (this.resetCount > 1) {
       this.resetCount --;
-      //console.log('bling.update delivered timer counting down' + this.resetCount)
     } else if (this.resetCount === 1) {
-      //console.log('bling.update delivered counter === 1')
       this.resetCount --;
       this.reset();
     } else {
       this.reset();
-      //console.log('bling.update delivered regardless of timer')
     }
   }
 
-  // TODO: introduce a random delay timer to display bling
+  // a random delay timer to display bling
   if (!this.visible && this.delayCount > 0) {
     this.delayCount --;
-    console.log(this.visible + ' delayCount: ' + this.delayCount);
   } else {
     this.visible = true;
-    console.log(this.visible);
   }
 
+  // has player dropped gem?
+  // dropZone timeout
+  if (this.picked && player.dropsBling) {
+    this.picked = false;
+    dropZone.reset();
+    this.reset();
+    console.log('bling player drops bling and dropZone and gem reset');
+    player.dropsBling = false;
+  }
 };
 
 
@@ -513,13 +514,27 @@ DropZone.prototype.render = function() {
 };
 
 DropZone.prototype.update = function() {
-  if (this.visible && !this.holdingBling && this.showCount > 0) {
+  // visibility from gem pickup to delivery or timeout
+  if (this.visible && !this.holdingBling && this.showCount > 1) {
     this.showCount --;
+
+    // if player doesn't reach dropZone in time
+  } else if (this.visible && !this.holdingBling && this.showCount === 1) {
+    player.dropsBling = true;
+    this.showCount --;
+    dropZone = new DropZone();
+    console.log('dropZone player drops bling and dropZone reset');
+
+    // fade out time from delivery to reset dropZone
   } else if (this.visible && this.resetCount > 1) {
     this.resetCount --;
+
+    // still visible til reset dropZone at last moment
   } else if (this.visible && this.resetCount === 1) {
     this.resetCount --;
     dropZone = new DropZone();
+    console.log('dropZone player delivers bling and dropZone reset');
+    // not visible
   } else {
     this.visible = false;
   }
@@ -750,7 +765,6 @@ ScoreBoard.prototype.render = function () {
   for (var i = 0; i < game.playerLives; i++) {
     //array[i] maybe i'll need an array of lives.
     ctx.drawImage(spriteHeart, this.lifeX + i * spriteWidth, this.lifeY, spriteWidth, spriteHeight);
-    //console.log((505 - spriteWidth * 3) / 2);
   }
 };
 
