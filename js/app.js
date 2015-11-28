@@ -256,15 +256,15 @@ Player.prototype.handleInput = function(keyPress){
         break;
       } else {
         this.x -= game.tileWidth;
-        break;
       }
+      break;
       case 'right':       // to move right in bounds
       if (this.x + game.tileWidth >= 505) {
         break;
       } else {
         this.x += game.tileWidth;
-        break;
       }
+      break;
       case 'up':          // to move up in bounds, reach water, reset position
       if (this.y - game.rowHeight < 0) {
         this.reset();
@@ -272,15 +272,15 @@ Player.prototype.handleInput = function(keyPress){
         break;
       } else {
         this.y -= game.rowHeight;
-        break;
       }
+      break;
       case 'down':       // to move down in bounds
       if (this.y + game.rowHeight > 394) {
         break;
       } else {
         this.y += game.rowHeight;
-        break;
       }
+      break;
       default:
       return;
     }
@@ -431,7 +431,7 @@ Bling.prototype.update = function() {
     this.picked = false;
     dropZone.reset();
     this.reset();
-    console.log('bling.update: bling.picked && player.dropsBling');
+    console.log('bling.update: bling.picked && player.dropsBling > bling.picked: false, drop reset, bling reset, player.dropsBling: false;');
     player.dropsBling = false;
   }
 };
@@ -442,28 +442,38 @@ Bling.prototype.update = function() {
 //TODO: rework this code into cases
 // Even though bling is static, check for player bumping into it as it is an array item
 Bling.prototype.checkCollisions = function() {
-  if (!this.picked && !this.dropped && !this.delivered) {
+
+  // interactions with player
+  // if player already holds a different instance of gem return false
+  // player ignore bling
+  if (!this.picked && player.hasBling) {
+    console.log('bling.checkCollisions: !this.picked && player.hasBling > should not pick up bling');
+    return false;
+  } else if (!this.picked && !this.dropped && !this.delivered && !player.hasBling) {
     if (this.x < player.x + player.hitX + player.hitWidth &&
         this.x + this.width > player.x + player.hitX &&
         this.y < player.y + player.hitHeight &&
         this.hitHeight + this.y > player.y) {
       // collision detected!
+      console.log('bling.checkCollisions: !this.picked && !this.dropped && !this.delivered > gem picked up');
       this.picked = true;
+      player.hasBling = true;
       return true;
     }
     return false;
   } else if (this.picked && !this.dropped && !this.delivered && dropZone.visible) {
-    // case for dropped in dropZone - the selector tile to be implemented.
-      if (dropZone.x < player.x + player.hitX + player.hitWidth &&
-          dropZone.x + dropZone.width > player.x + player.hitX &&
-          dropZone.y < player.y + player.hitHeight &&
-          dropZone.height + dropZone.y > player.y) {
-        // collision detected!
-        this.delivered = true;
-        dropZone.holdingBling = true;
-        return true;
-      }
-
+    // case for dropped in dropZone
+    if (dropZone.x < player.x + player.hitX + player.hitWidth &&
+        dropZone.x + dropZone.width > player.x + player.hitX &&
+        dropZone.y < player.y + player.hitHeight &&
+        dropZone.height + dropZone.y > player.y) {
+      // collision detected!
+      this.delivered = true;
+      dropZone.dropReceived = true;
+      player.hasBling = false;
+      console.log('bling.checkCollisions: this.picked && !this.dropped && !this.delivered && dropZone.visible> gem delivered');
+      return true;
+    }
     return false;
   } else {
     // case for picked up but hit by bug before reach drop zone
@@ -510,7 +520,7 @@ var DropZone = function() {
   this.showCount = 0;
   this.resetTime = 20; // for reset fade time
   this.resetCount = 0;
-  this.holdingBling = false; // true when bling delivered here
+  this.dropReceived = false; // true when bling delivered here
   this.reset();
 
   // bling to appear in random places (grass rows)
@@ -538,16 +548,16 @@ DropZone.prototype.render = function() {
 
 DropZone.prototype.update = function() {
   // visibility from gem pickup to delivery or timeout
-  if (this.visible && !this.holdingBling && this.showCount > 1) {
+  if (this.visible && !this.dropReceived && this.showCount > 1) {
     this.showCount --;
 
     // if player doesn't reach dropZone in time
-    // TODO: rename holdingBling to dropReceived
-  } else if (this.visible && !this.holdingBling && this.showCount === 1) {
+  } else if (this.visible && !this.dropReceived && this.showCount === 1) {
     player.dropsBling = true;
+    player.hasBling = false;
     this.showCount --;
     dropZone = new DropZone();
-    console.log('dropZone.update: this.visible && !this.holdingBling && this.showCount === 1 > player drops bling and dropZone reset');
+    console.log('dropZone.update: this.visible && !this.dropReceived && this.showCount === 1 > player drops bling and dropZone reset');
 
     // fade out time from delivery to reset dropZone
   } else if (this.visible && this.resetCount > 1) {
