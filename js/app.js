@@ -12,13 +12,6 @@ var Game = function(){
   this.startScreen = true;
   this.gameOver = false;
   this.paused = true;
-  // this.tileWidth = 101;
-  // this.tileHeight = 171;
-  // this.rowHeight = 83;
-  // this.rowCenterY = 21; // offset so that bugs run in centre of row
-  // this.numRows = 6;
-  // this.numCols = 5;
-  // this.minBling = 3; // number of gems in play
 };
 
 //------------------------
@@ -101,13 +94,7 @@ var Enemy = function() {
    this.width = Game.TILE_WIDTH;
    this.height = Game.TILE_HEIGHT;
 
-  // sprite target dimensions (visible part of tile)
-  // this.hitWidth = 75;
-  // this.hitHeight = 44;  // required for depth of bug
-  // this.hitX = 11;       // x offset for visible part of tile
-
   // bug speed - want randomised 3, slow (1), med(2), fast(3)
-//  var minSpeed = 100; // may increase if implement levels
   this.speed = game.randomise(1, 3) * Enemy.MIN_SPEED;
 
   this.sprite = 'images/enemy-bug.png';
@@ -128,7 +115,6 @@ Enemy.MIN_SPEED = 100; // may increase if implement levels
 //------------------------
 // Enemy.update(dt)
 //------------------------
-
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
 Enemy.prototype.update = function(dt) {
@@ -201,10 +187,6 @@ Enemy.prototype.checkCollisions = function() {
 //************************
 
 var Player = function() {
-  // target sprite dimensions (visible area)
-  //this.hitWidth = 70;
-//  this.hitHeight = 80;
-  //this.hitX = 15;     // x offset for visible area
   this.reset();       // setting for new player
   this.sprite = 'images/char-boy.png';  // may change if implement levels
 };
@@ -343,8 +325,6 @@ Player.prototype.reset = function(dt) {
 var Bling = function() {
   // initial state of bling // TODO: maybe create an initiate method
   this.visible = false;
-//  this.shrink = 0.6;      // Draw the bling - smaller - it is huge!
-//  this.shrinkMore = 0.3;  // size for bling when picked up
 
   // bling picked up, dropped, delivered, collected
   this.picked = false;
@@ -353,21 +333,15 @@ var Bling = function() {
   this.collected = false;     // if implement levels
 
   // delay appearance of bling
-  //this.delayMin = 20;
-  //this.delayMax = 200;
   this.delayCount = game.randomise(Bling.DELAY_MIN, Bling.DELAY_MAX);
   // for reset after delivery - fade time shorter than dropzone fade
-  //this.resetTime = 15;
   this.resetCount = 0;
-  //this.reset();
 
   // sprite dimensions (might also work as hit dimensions)
   this.width = Game.TILE_WIDTH * Bling.SHRINK;
   this.height = Game.TILE_HEIGHT * Bling.SHRINK;
   // offset to centre bling on tile
   this.offsetX = (Game.TILE_WIDTH - this.width) / 2;
-  // hitHeight defined for collisions with player
-  //this.hitHeight = 40;
 
   // sprite dimensions if (this.picked)
   this.pickWidth = Game.TILE_WIDTH * Bling.SHRINKMORE;
@@ -443,34 +417,43 @@ Bling.prototype.update = function() {
   } else
 
     if (this.resetCount === 1) {
-      console.log('bling.update: delivered: true > resetCount = ' + this.resetCount);
+      console.log('bling.update: DELIVERED: true > resetCount = ' + this.resetCount);
       console.log(' - this.picked = ' + this.picked);
       console.log(' - this.delivered = ' + this.delivered);
       console.log(' - this.dropped = ' + this.dropped);
       console.log(' - player.hasBling = ' + player.hasBling);
+      console.log(' - player.dropsBling = ' + player.dropsBling);
       console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-      console.log('*********************');
+      console.log('------ Actions ------');
       this.resetCount --;
       this.delivered = false;
+      console.log(' - this.delivered = ' + this.delivered);
+      console.log('---- bling reset ----');
       this.reset();
+      console.log('*********************');
     }
 
     // check if bling dropped by dZ timeout
     if (this.picked && player.dropsBling) {
-      console.log('bling.update: dropZone timeout: dropped');
+      console.log('bling.update: dropZone timeout: DROPPED');
       console.log(' - this.picked = ' + this.picked);
       console.log(' - this.delivered = ' + this.delivered);
       console.log(' - this.dropped = ' + this.dropped);
       console.log(' - player.hasBling = ' + player.hasBling);
+      console.log(' - player.dropsBling = ' + player.dropsBling);
       console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-      console.log('*********************');
+      console.log('------ Actions ------');
       this.picked = false;
-      dropZone.reset();
-      this.reset();
-      //console.log('bling.update: bling.picked && player.dropsBling > bling.picked: false, drop reset, bling reset, player.dropsBling: false;');
       player.dropsBling = false;
+      console.log(' - this.picked = ' + this.picked);
+      console.log(' - player.dropsBling = ' + player.dropsBling);
+      console.log('--- dropZone reset ---');
+      dropZone.reset();
+      console.log('---- bling reset ----');
+      this.reset();
+      console.log('*********************');
+      //console.log('bling.update: bling.picked && player.dropsBling > bling.picked: false, drop reset, bling reset, player.dropsBling: false;');
     }
-
 
 // console.log('bling.update: visible before switch');
 
@@ -480,11 +463,12 @@ Bling.prototype.update = function() {
         this.picked = true;
         player.hasBling = true;
         dropZone.show();
-        console.log('bling.update: checkCollisions: pickup');
+        console.log('bling.update: checkCollisions: PICKUP');
         console.log(' - this.picked = ' + this.picked);
         console.log(' - this.delivered = ' + this.delivered);
         console.log(' - this.dropped = ' + this.dropped);
         console.log(' - player.hasBling = ' + player.hasBling);
+        console.log(' - player.dropsBling = ' + player.dropsBling);
         console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
         console.log(' - resetCount = ' + this.resetCount);
         console.log('*********************');
@@ -497,11 +481,12 @@ Bling.prototype.update = function() {
         player.hasBling = false;
         scoreBoard.score += 10;
         this.resetCount = Bling.RESET_TIME;
-        console.log('bling.update: checkCollisions: delivered');
+        console.log('bling.update: checkCollisions: DELIVERED');
         console.log(' - this.picked = ' + this.picked);
         console.log(' - this.delivered = ' + this.delivered);
         console.log(' - this.dropped = ' + this.dropped);
         console.log(' - player.hasBling = ' + player.hasBling);
+        console.log(' - player.dropsBling = ' + player.dropsBling);
         console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
         console.log(' - resetCount = ' + this.resetCount);
         console.log('*********************');
@@ -513,93 +498,21 @@ Bling.prototype.update = function() {
         this.dropped = true;
         dropZone.reset();
         this.reset();
-        console.log('bling.update: checkCollisions: dropped');
+        console.log('bling.update: checkCollisions: DROPPED');
         console.log(' - this.picked = ' + this.picked);
         console.log(' - this.delivered = ' + this.delivered);
         console.log(' - this.dropped = ' + this.dropped);
         console.log(' - player.hasBling = ' + player.hasBling);
+        console.log(' - player.dropsBling = ' + player.dropsBling);
         console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
         console.log('*********************');
         break;
       default:
         return;
     } // end of switch
-console.log('bling.update: visible after switch');
 
-  // if (this.checkCollisions()) {
-  //   // checkCollisions interaction with player - picked
-  //   if (this.picked){
-  //     dropZone.show();
-  //   }
-  //   // checkCollisions interaction with dropZone - delivered
-  //   // start resetTime, increase score, set picked to false,
-  //   // TODO: ?? set delivered to false ??
-  //   if (this.delivered) {
-  //     this.picked = false;
-  //     scoreBoard.score += 10;
-  //     this.resetCount = this.resetTime;
-  //   }
-  //   // TODO:
-  //   // if is dropped (hit by bug or in water or dropZone timed out)
-  //   if (this.dropped) {
-  //     this.picked = false;
-  //     dropZone.reset();
-  //     this.reset();
-  //     console.log('bling.update: checkCollisions true: dropped: true');
-  //   }
-  // } // end checkCollisions
-
-  // start check timeout to release gem after delivery (it just looks nicer)
-  // TODO: create method and put in switch above
-  // if (this.delivered) {
-  //   if (this.resetCount > 1) {
-  //     this.resetCount --;
-  //     console.log('bling.update: delivered: true > resetCount = ' + this.resetCount);
-  //     console.log(' - this.picked = ' + this.picked);
-  //     console.log(' - this.delivered = ' + this.delivered);
-  //     console.log(' - this.dropped = ' + this.dropped);
-  //     console.log(' - player.hasBling = ' + player.hasBling);
-  //     console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-  //     console.log('*********************');
-  //   } else if (this.resetCount === 1) {
-  //     this.resetCount --;
-  //     this.reset();
-  //   } else {
-  //     this.reset();
-  //   }
-  // }
-
-  // if (this.resetCount === 1) {
-  //   console.log('bling.update: delivered: true > resetCount = ' + this.resetCount);
-  //   console.log(' - this.picked = ' + this.picked);
-  //   console.log(' - this.delivered = ' + this.delivered);
-  //   console.log(' - this.dropped = ' + this.dropped);
-  //   console.log(' - player.hasBling = ' + player.hasBling);
-  //   console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-  //   console.log('*********************');
-  //   this.resetCount --;
-  //   this.delivered = false;
-  //   this.reset();
-  // }
-
-  // has player dropped gem?
-  // dropZone timeout
-  // if (this.picked && player.dropsBling) {
-  //   console.log('bling.update: dropZone timeout: dropped');
-  //   console.log(' - this.picked = ' + this.picked);
-  //   console.log(' - this.delivered = ' + this.delivered);
-  //   console.log(' - this.dropped = ' + this.dropped);
-  //   console.log(' - player.hasBling = ' + player.hasBling);
-  //   console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-  //   console.log('*********************');
-  //   this.picked = false;
-  //   dropZone.reset();
-  //   this.reset();
-  //   //console.log('bling.update: bling.picked && player.dropsBling > bling.picked: false, drop reset, bling reset, player.dropsBling: false;');
-  //   player.dropsBling = false;
-  // }
-
-} // end of bling visible = true;
+  } // end of bling visible = true;
+  // end checkCollisions
 
   // timer to display bling after a random delay
   if (!this.visible && this.delayCount > 0) {
@@ -607,7 +520,6 @@ console.log('bling.update: visible after switch');
   } else {
     this.visible = true;
   }
-
 };
 
 //------------------------
@@ -620,40 +532,41 @@ Bling.prototype.checkCollisions = function() {
   // interactions with player
   // if player already holds a different instance of gem return false
   // player ignore bling
-  if (!this.picked && player.hasBling) {
-  //  console.log('bling.checkCollisions: !this.picked && player.hasBling > should not pick up bling');
-    return 'ignore';
-  } else if (!this.picked && !this.dropped && !this.delivered && !player.hasBling) {
-    if (this.x < player.x + Player.HIT_X + Player.HIT_WIDTH &&
-        this.x + this.width > player.x + Player.HIT_X &&
-        this.y < player.y + Player.HIT_HEIGHT &&
-        Bling.HIT_HEIGHT + this.y > player.y) {
-      // collision detected!
-    //  console.log('bling.checkCollisions: !this.picked && !this.dropped && !this.delivered > gem picked up');
-      // this.picked = true;
-      // player.hasBling = true;
-      return 'pickup';
-    }
-    return 'ignore';
-  } else if (this.picked && !this.dropped && !this.delivered && dropZone.visible) {
-    // case for dropped in dropZone
-    if (dropZone.x < player.x + Player.HIT_X + Player.HIT_WIDTH &&
-        dropZone.x + dropZone.width > player.x + Player.HIT_X &&
-        dropZone.y < player.y + Player.HIT_HEIGHT &&
-        dropZone.height + dropZone.y > player.y) {
-      // collision detected!
-      // this.delivered = true;
-      // dropZone.dropReceived = true;
-      // player.hasBling = false;
-    //  console.log('bling.checkCollisions: this.picked && !this.dropped && !this.delivered && dropZone.visible> gem delivered');
-      return 'delivered';
-    }
-    return 'ignore';
-  } else {
-    // case for picked up but hit by bug before reach drop zone
-    return 'ignore';
-  }
-};
+  // all conditions need to be false in order to pick up bling
+
+  if (!this.delivered && !this.dropped && !player.dropsBling) {
+    // conditions for delivery in dropZone
+    if (this.picked && player.hasBling && dropZone.visible) {
+      if (dropZone.x < player.x + Player.HIT_X + Player.HIT_WIDTH &&
+          dropZone.x + dropZone.width > player.x + Player.HIT_X &&
+          dropZone.y < player.y + Player.HIT_HEIGHT &&
+          dropZone.height + dropZone.y > player.y) {
+        // collision detected!
+        console.log('bling.checkCollisions: DELIVERED');
+        console.log('*********************');
+        return 'delivered';
+      }
+    } // end of delivery conditions
+
+    // conditions for pickup
+    if (!this.picked && !player.hasBling && !dropZone.dropReceived && !dropZone.visible) {
+      if (this.x < player.x + Player.HIT_X + Player.HIT_WIDTH &&
+          this.x + this.width > player.x + Player.HIT_X &&
+          this.y < player.y + Player.HIT_HEIGHT &&
+          Bling.HIT_HEIGHT + this.y > player.y) {
+        // collision detected!
+        console.log('bling.checkCollisions: PICKUP');
+        console.log('*********************');
+        return 'pickup';
+      } else {
+//        console.log('bling.checkCollisions: IGNORE > wrong conditions for pickup');
+        return 'ignore';
+      }
+    } // end pickup conditions
+  } // these must be false
+//  console.log('bling.checkCollisions: IGNORE > dropped or delivered');
+  return 'ignore';
+}; // end checkCollisions
 
 //------------------------
 // Bling.reset()
@@ -732,11 +645,21 @@ DropZone.prototype.update = function() {
 
     // if player doesn't reach dropZone in time
   } else if (this.visible && !this.dropReceived && this.displayCount === 1) {
+    console.log('dropZone.update: TIMEOUT > player drops bling and dropZone reset');
+    console.log(' - player.hasBling = ' + player.hasBling);
+    console.log(' - player.dropsBling = ' + player.dropsBling);
+    console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
+    console.log('------ Actions ------');
     player.dropsBling = true;
-    player.hasBling = false;
+    player.hasBling = false;  // was true
     this.displayCount --;
+    console.log(' - player.hasBling = ' + player.hasBling);
+    console.log(' - player.dropsBling = ' + player.dropsBling);
+    console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
+    console.log('--- dropZone reset ---');
     dropZone = new DropZone();
-    console.log('dropZone.update: this.visible && !this.dropReceived && this.displayCount === 1 > player drops bling and dropZone reset');
+    console.log('--- DO NOT PICKUP ---');
+    console.log('*********************');
 
     // fade out time from delivery to reset dropZone
   } else if (this.visible && this.resetCount > 1) {
@@ -746,7 +669,11 @@ DropZone.prototype.update = function() {
   } else if (this.visible && this.resetCount === 1) {
     this.resetCount --;
     dropZone = new DropZone();
-    console.log('dropZone.update: this.visible && this.resetCount === 1 > dropZone reset');
+    console.log('dropZone.update: RESET count === 1 > dropZone reset');
+    console.log(' - player.hasBling = ' + player.hasBling);
+    console.log(' - player.dropsBling = ' + player.dropsBling);
+    console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
+    console.log('*********************');
     // not visible
   } else {
     this.visible = false;
