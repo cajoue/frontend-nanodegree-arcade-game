@@ -318,8 +318,18 @@ Player.prototype.handleInput = function(keyPress){
       break;
       case 'up':          // to move up in bounds, reach water, reset position
       if (this.y - Game.ROW_HEIGHT < 0) {
+        // don't jump in water with bling
+        if (this.hasBling) {
+          scoreBoard.score -= 5; // lose 10 points
+          this.losesBling();      // drop bling
+          dropZone.visible = false;
+        } else {
+          scoreBoard.score ++;     // reached water add a point to score
+        }
+
         this.reset();
-        scoreBoard.score ++;  // reached water add a point to score
+        // scoreBoard.score ++;  // reached water add a point to score
+
         break;
       } else {
         this.y -= Game.ROW_HEIGHT;
