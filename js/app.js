@@ -25,6 +25,7 @@ Game.NUM_ROWS = 6;
 Game.NUM_COLS = 5;
 Game.MIN_BLING = 3; // number of gems in play
 Game.MIN_ENEMIES = 3;  // number of enemies in play
+Game.PLAYER_LIVES = 3;
 
 //------------------------
 // Game.isGameOver()
@@ -62,10 +63,13 @@ Game.prototype.isPaused = function (pause) {
 
 // Start a new game
 Game.prototype.startNewGame = function () {
-  this.playerLives = 3;
+  this.playerLives = Game.PLAYER_LIVES;
   this.paused = false;
   player = new Player();
   scoreBoard = new ScoreBoard();
+  dropZone = new DropZone();
+  allEnemies = [new Enemy(), new Enemy(), new Enemy()];
+  bling = [new Bling(), new Bling()];
 };
 
 //------------------------
@@ -127,17 +131,39 @@ Enemy.prototype.update = function(dt) {
 
   // checkCollisions to see if hit player TODO: or player carrying gem
   if (this.checkCollisions()) {
+    console.log('enemy.update: COLLISION with player');
+    console.log(' - player.hasBling = ' + player.hasBling);
+    console.log(' - player.dropsBling = ' + player.dropsBling);
+    console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
+    console.log(' - dropZone.visible = ' + dropZone.visible);
+    console.log('------ Actions ------');
+
+    if (player.hasBling) {
+      scoreBoard.score -= 10; // lose 10 points
+      player.losesBling();      // drop bling
+      dropZone.visible = false;
+    } else {
+      scoreBoard.score --;            // lose a point
+    }
+
     game.playerLives --;            // lose a life
     if (game.playerLives === 0) {   // gameOver
       return game.isGameOver(true);
     }
-    scoreBoard.score --;            // lose a point
+
     player.reset();                 // reset player
+    console.log(' - player.hasBling = ' + player.hasBling);
+    console.log(' - player.dropsBling = ' + player.dropsBling);
+    console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
+    console.log(' - dropZone.visible = ' + dropZone.visible);
+    console.log('*********************');
     this.x = this.reset();          // reset this bug
   }
+
   if (this.x > 505) {               // if out of bounds reset bug
     this.x = this.reset();
   }
+
 };
 
 //------------------------
@@ -164,7 +190,6 @@ Enemy.prototype.reset = function() {
   }
 };
 
-
 //------------------------
 // Enemy.checkCollisions()
 //------------------------
@@ -187,8 +212,7 @@ Enemy.prototype.checkCollisions = function() {
 //************************
 
 var Player = function() {
-  this.reset();       // setting for new player
-  this.sprite = 'images/char-boy.png';  // may change if implement levels
+  this.initial();       // setting for new player
 };
 
 //------------------------
@@ -199,6 +223,18 @@ var Player = function() {
 Player.HIT_WIDTH = 70;
 Player.HIT_HEIGHT = 80;
 Player.HIT_X = 15;     // x offset for visible area
+
+//------------------------
+// Player.initial()
+//------------------------
+
+Player.prototype.initial = function() {
+  // interact with gems
+  this.hasBling = false;   // set true when carry bling
+  this.dropsBling = false; // mostly false, lose bling if dropZone times out
+  this.sprite = 'images/char-boy.png';  // may change if implement levels
+  this.reset();       // start position for new player
+};
 
 //------------------------
 // Player.update()
@@ -307,13 +343,19 @@ Player.prototype.handleInput = function(keyPress){
 //------------------------
 
 Player.prototype.reset = function(dt) {
-  // interact with gems
-  this.hasBling = false;   // set true when carry bling
-  this.dropsBling = false; // mostly false, lose bling if dropZone times out
-
-  // randomise start position and centre in tile
+    // randomise start position and centre in tile
   this.x = game.randomise(0, 4) * Game.TILE_WIDTH;
   this.y = (Game.NUM_ROWS - 1) * Game.ROW_HEIGHT - Game.ROW_CENTER_Y;
+};
+
+//------------------------
+// Player.losesBling
+//------------------------
+
+  // interact with gems
+Player.prototype.losesBling = function() {
+  this.hasBling = false;   // true when carry bling
+  this.dropsBling = true; // mostly false, lose bling if dropZone times out
 };
 
 
