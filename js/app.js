@@ -12,6 +12,7 @@ var Game = function(){
   this.startScreen = true;
   this.gameOver = false;
   this.paused = true;
+  this.gameWon = false;
 };
 
 //------------------------
@@ -27,7 +28,8 @@ Game.MIN_BLING = 3; // number of gems in play
 Game.MIN_ENEMIES = 3;  // number of enemies in play
 Game.PLAYER_LIVES = 3;
 Game.LEVEL = 1;         // default game level - to be implemented
-Game.COLLECTION = 3;    // number of bling to collect
+Game.WIN = 3;           // number of levels
+Game.COLLECTION = 1;    // number of bling to collect
 Game.DEFAULT_COLLECTIBLE = 'images/gem-blue.png';
 
 //------------------------
@@ -79,16 +81,17 @@ Game.prototype.startNewGame = function () {
 Game.prototype.startNewLevel = function (level) {
   this.playerLives = Game.PLAYER_LIVES;
   this.level = level;
-  this.collection = 0;
+  scoreBoard.collection = 0;
   this.paused = false;
   player = new Player();
   dropZone = new DropZone();
   allEnemies = [new Enemy(), new Enemy(), new Enemy()];
   bling = [new Bling(), new Bling()];
-  if (level === 2) {
+  gameLevelUpScreen = new GameLevelUpScreen(level);
+  if (this.level === 2) {
     scoreBoard.collectible = 'images/gem-green.png';
     scoreBoard.collect = 'green';
-  } else if (level === 3) {
+  } else if (this.level === 3) {
     scoreBoard.collectible = 'images/gem-orange.png';
     scoreBoard.collect = 'orange';
   } else {
@@ -96,6 +99,32 @@ Game.prototype.startNewLevel = function (level) {
     scoreBoard.collect = 'blue';
   }
 };
+
+//------------------------
+// Game.isLevelComplete()
+//------------------------
+
+// all lives lost and game is over
+Game.prototype.isLevelComplete = function (levelComplete) {
+  if (levelComplete) {
+    this.gameOver = false;
+    this.gameOn = false;
+    this.startScreen = false;
+    this.paused = false;
+    this.levelComplete = levelComplete;
+    //gameLevelUpScreen(this.level);
+    // console.log('- game.level = ' + game.level);
+
+    if (game.level === Game.WIN) {
+      game.gameWon = true;
+      this.levelComplete = false;
+      gameWonScreen.show = game.gameWon;
+    } else {
+      gameLevelUpScreen.show = this.levelComplete;
+    }
+  }
+};
+
 
 //------------------------
 // Game.randomise(first, last)
@@ -156,13 +185,6 @@ Enemy.prototype.update = function(dt) {
 
   // checkCollisions to see if hit player TODO: or player carrying gem
   if (this.checkCollisions()) {
-    console.log('enemy.update: COLLISION with player');
-    console.log(' - player.hasBling = ' + player.hasBling);
-    console.log(' - player.dropsBling = ' + player.dropsBling);
-    console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-    console.log(' - dropZone.visible = ' + dropZone.visible);
-    console.log('------ Actions ------');
-
     if (player.hasBling) {
       scoreBoard.score -= 10; // lose 10 points
       player.losesBling();      // drop bling
@@ -177,18 +199,12 @@ Enemy.prototype.update = function(dt) {
     }
 
     player.reset();                 // reset player
-    console.log(' - player.hasBling = ' + player.hasBling);
-    console.log(' - player.dropsBling = ' + player.dropsBling);
-    console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-    console.log(' - dropZone.visible = ' + dropZone.visible);
-    console.log('*********************');
     this.x = this.reset();          // reset this bug
   }
 
   if (this.x > 505) {               // if out of bounds reset bug
     this.x = this.reset();
   }
-
 };
 
 //------------------------
@@ -287,8 +303,10 @@ Player.prototype.handleInput = function(keyPress){
 
   // press spacebar to startNewGame from startScreen
   if (game.startScreen) {
+    // console.log('------ handle start screen ------');
     switch (keyPress) {
       case 'space':
+      // console.log('------ press space bar ------');
       game.startScreen = false;
       game.gameOn = true;
       gameInfo.show = game.startScreen;
@@ -300,8 +318,10 @@ Player.prototype.handleInput = function(keyPress){
 
   // press spacebar to startNewGame from gameOverScreen
   } else if (game.gameOver){
+    // console.log('------ handle game over screen ------');
     switch (keyPress) {
       case 'space':
+      // console.log('------ press space bar ------');
       game.gameOver = false;
       game.gameOn = true;
       gameOverScreen.show = game.gameOver;
@@ -316,10 +336,57 @@ Player.prototype.handleInput = function(keyPress){
       return; // do nothing
     }
 
+    // press spacebar to startNewGame from gameWonScreen
+  } else if (game.gameWon){
+      // console.log('------ handle game won screen ------');
+      switch (keyPress) {
+        case 'space':
+        // console.log('------ press space bar ------');
+        game.gameWon = false;
+        game.gameOn = true;
+        gameWonScreen.show = game.gameWon;
+        game.startNewGame();
+        break;
+
+        // press i to show startScreen information from gameWonScreen
+        case 'i':
+        gameInfo.showScreen();
+        break;
+        default:
+        return; // do nothing
+      }
+
+    // press spacebar to level up
+  } else if (game.levelComplete){
+    // console.log('------ handle level up screen ------');
+    switch (keyPress) {
+      case 'space':
+      // console.log('------ press space bar ------');
+      game.levelComplete = false;
+      game.gameOn = true;
+      gameLevelUpScreen.show = game.levelComplete;
+      //game.startNewGame();
+      if (game.level + 1 > Game.WIN) {
+        // console.log('------  ***** you win ***** ------');
+      } else {
+        game.startNewLevel(game.level + 1);
+      }
+
+      break;
+      default:
+      return; // do nothing
+    }
+
+
   // press spacebar to unpause game from gamePausedScreen
   } else if (game.paused){
+    // console.log('------ handle paused screen ------');
+    // console.log('------ press space bar ------');
     game.paused = false;
     gamePausedScreen.show = false;
+
+
+
   } else {
 
     switch (keyPress) {
@@ -495,47 +562,19 @@ Bling.prototype.update = function() {
   } else
 
     if (this.resetCount === 1) {
-      console.log('bling.update: DELIVERED: true > resetCount = ' + this.resetCount);
-      console.log(' - this.picked = ' + this.picked);
-      console.log(' - this.delivered = ' + this.delivered);
-      console.log(' - this.dropped = ' + this.dropped);
-      console.log(' - player.hasBling = ' + player.hasBling);
-      console.log(' - player.dropsBling = ' + player.dropsBling);
-      console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-      console.log(' - this.colour = ' + this.colour);
-      console.log(' - scoreBoard.collect = ' + scoreBoard.collect);
-      console.log('------ Actions ------');
+      game.isLevelComplete(scoreBoard.collection === Game.COLLECTION);
       this.resetCount --;
       this.delivered = false;
-      console.log(' - this.delivered = ' + this.delivered);
-      console.log('---- bling reset ----');
       this.reset();
-      console.log('*********************');
     }
 
     // check if bling dropped by dZ timeout
     if (this.picked && player.dropsBling) {
-      console.log('bling.update: dropZone timeout: DROPPED');
-      console.log(' - this.picked = ' + this.picked);
-      console.log(' - this.delivered = ' + this.delivered);
-      console.log(' - this.dropped = ' + this.dropped);
-      console.log(' - player.hasBling = ' + player.hasBling);
-      console.log(' - player.dropsBling = ' + player.dropsBling);
-      console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-      console.log('------ Actions ------');
       this.picked = false;
       player.dropsBling = false;
-      console.log(' - this.picked = ' + this.picked);
-      console.log(' - player.dropsBling = ' + player.dropsBling);
-      console.log('--- dropZone reset ---');
       dropZone.reset();
-      console.log('---- bling reset ----');
       this.reset();
-      console.log('*********************');
-      //console.log('bling.update: bling.picked && player.dropsBling > bling.picked: false, drop reset, bling reset, player.dropsBling: false;');
     }
-
-// console.log('bling.update: visible before switch');
 
     switch (this.checkCollisions()) {
       // player picks up gem
@@ -543,36 +582,18 @@ Bling.prototype.update = function() {
         this.picked = true;
         player.hasBling = true;
         dropZone.show();
-        console.log('bling.update: checkCollisions: PICKUP');
-        console.log(' - this.picked = ' + this.picked);
-        console.log(' - this.delivered = ' + this.delivered);
-        console.log(' - this.dropped = ' + this.dropped);
-        console.log(' - player.hasBling = ' + player.hasBling);
-        console.log(' - player.dropsBling = ' + player.dropsBling);
-        console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-        console.log(' - resetCount = ' + this.resetCount);
-        console.log('*********************');
         break;
       // gem has been deliverd to dropZone
       case 'delivered':
         this.picked = false;
         this.delivered = true;
         dropZone.dropReceived = true;
-        if (this.colour === scoreBoard.collect) {
-          scoreBoard.collection ++;
-        }
         player.hasBling = false;
         scoreBoard.score += 10;
         this.resetCount = Bling.RESET_TIME;
-        console.log('bling.update: checkCollisions: DELIVERED');
-        console.log(' - this.picked = ' + this.picked);
-        console.log(' - this.delivered = ' + this.delivered);
-        console.log(' - this.dropped = ' + this.dropped);
-        console.log(' - player.hasBling = ' + player.hasBling);
-        console.log(' - player.dropsBling = ' + player.dropsBling);
-        console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-        console.log(' - resetCount = ' + this.resetCount);
-        console.log('*********************');
+        if (this.colour === scoreBoard.collect) {
+          scoreBoard.collection ++;
+        }
         break;
       // gem has been dropped
       case 'dropped':
@@ -581,14 +602,6 @@ Bling.prototype.update = function() {
         this.dropped = true;
         dropZone.reset();
         this.reset();
-        console.log('bling.update: checkCollisions: DROPPED');
-        console.log(' - this.picked = ' + this.picked);
-        console.log(' - this.delivered = ' + this.delivered);
-        console.log(' - this.dropped = ' + this.dropped);
-        console.log(' - player.hasBling = ' + player.hasBling);
-        console.log(' - player.dropsBling = ' + player.dropsBling);
-        console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-        console.log('*********************');
         break;
       default:
         return;
@@ -625,8 +638,6 @@ Bling.prototype.checkCollisions = function() {
           dropZone.y < player.y + Player.HIT_HEIGHT &&
           dropZone.height + dropZone.y > player.y) {
         // collision detected!
-        console.log('bling.checkCollisions: DELIVERED');
-        console.log('*********************');
         return 'delivered';
       }
     } // end of delivery conditions
@@ -638,16 +649,12 @@ Bling.prototype.checkCollisions = function() {
           this.y < player.y + Player.HIT_HEIGHT &&
           Bling.HIT_HEIGHT + this.y > player.y) {
         // collision detected!
-        console.log('bling.checkCollisions: PICKUP');
-        console.log('*********************');
         return 'pickup';
       } else {
-//        console.log('bling.checkCollisions: IGNORE > wrong conditions for pickup');
         return 'ignore';
       }
     } // end pickup conditions
   } // these must be false
-//  console.log('bling.checkCollisions: IGNORE > dropped or delivered');
   return 'ignore';
 }; // end checkCollisions
 
@@ -728,22 +735,9 @@ DropZone.prototype.update = function() {
 
     // if player doesn't reach dropZone in time
   } else if (this.visible && !this.dropReceived && this.displayCount === 1) {
-    console.log('dropZone.update: TIMEOUT > player drops bling and dropZone reset');
-    console.log(' - player.hasBling = ' + player.hasBling);
-    console.log(' - player.dropsBling = ' + player.dropsBling);
-    console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-    console.log('------ Actions ------');
-    //player.dropsBling = true;
-    //player.hasBling = false;  // was true
     player.losesBling();
     this.displayCount --;
-    console.log(' - player.hasBling = ' + player.hasBling);
-    console.log(' - player.dropsBling = ' + player.dropsBling);
-    console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-    console.log('--- dropZone reset ---');
     dropZone = new DropZone();
-    console.log('--- DO NOT PICKUP ---');
-    console.log('*********************');
 
     // fade out time from delivery to reset dropZone
   } else if (this.visible && this.resetCount > 1) {
@@ -753,11 +747,6 @@ DropZone.prototype.update = function() {
   } else if (this.visible && this.resetCount === 1) {
     this.resetCount --;
     dropZone = new DropZone();
-    console.log('dropZone.update: RESET count === 1 > dropZone reset');
-    console.log(' - player.hasBling = ' + player.hasBling);
-    console.log(' - player.dropsBling = ' + player.dropsBling);
-    console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
-    console.log('*********************');
     // not visible
   } else {
     this.visible = false;
@@ -807,6 +796,7 @@ var GameScreen = function() {
   this.y = GameScreen.Y;
   this.width = Game.TILE_WIDTH * Game.NUM_COLS;
   this.height = GameScreen.HEIGHT;
+  this.level = Game.LEVEL;
   this.show = false;
 };
 
@@ -890,10 +880,11 @@ GameInfo.prototype.infoText = function () {
   ctx.font = '24pt Wendy One';
   ctx.fillText('Arrow keys move the player', this.width / 2, y += lineHeight);
   ctx.fillText('You have 3 lives', this.width / 2, y += lineHeight);
-  ctx.fillText('Collect BLING for big points', this.width / 2, y += lineHeight);
-  ctx.fillText('Rescue the Prince', this.width / 2, y += lineHeight);
-  ctx.fillText('Lose a point if a BUG hits you', this.width / 2, y += lineHeight);
-  ctx.fillText('-- !! and a LIFE !! --', this.width / 2, y += lineHeight);
+  ctx.fillText('Stash BLING in the drop Zone', this.width / 2, y += lineHeight);
+  ctx.fillText('Start with the BLUEs', this.width / 2, y += lineHeight);
+//  ctx.fillText('Rescue the Prince', this.width / 2, y += lineHeight); // if i only had more time sweet prince.
+  ctx.fillText('!! Lose a point if a BUG hits you !!', this.width / 2, y += lineHeight);
+  ctx.fillText('! and lose BLING and lose a LIFE !', this.width / 2, y += lineHeight);
   ctx.font = '48pt Wendy One';
   ctx.fillText('On y va!!', this.width / 2, y += lineExtraHeight);
   ctx.font = '24pt Wendy One';
@@ -907,8 +898,11 @@ GameInfo.prototype.infoText = function () {
 
 GameInfo.prototype.showScreen = function () {
   game.gameOver = false;
+  game.gameWon = false;
   game.gameOn = false;
   gameOverScreen.show = false;
+  gameWonScreen.show = false;
+  gameLevelUpScreen.show = false;
   game.startScreen = true;
   this.show = game.startScreen;
   this.render();
@@ -990,6 +984,87 @@ GamePausedScreen.prototype.infoText = function () {
   ctx.fillText('Spacebar to CONTINUE', this.width / 2 + 25, y += lineHeight);
 };
 
+//************************
+// Game Level Up Screen
+//************************
+
+var GameLevelUpScreen = function(level){
+  this.x = 25;
+  this.y = 200;
+  this.width = 455;
+  this.height = 200;
+  this.level = level;
+  this.titleText = 'LEVEL ' + level + ' COMPLETE';
+  this.show = game.levelComplete;
+};
+
+//------------------------
+// GameLevelUp.constructor()
+//------------------------
+
+GameLevelUpScreen.prototype = new GameScreen();
+
+//------------------------
+// GameLevelUp.infoText()
+//------------------------
+
+GameLevelUpScreen.prototype.infoText = function () {
+  var y = this.y;
+  var lineHeight = 50;
+  var lineExtraHeight = 70;
+  ctx.font = '36pt Wendy One';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'white';
+  ctx.fillText(this.titleText, this.width / 2 + 25, y += lineExtraHeight);
+  ctx.font = '24pt Wendy One';
+  if (this.level === 1) {
+    ctx.fillText('Now grab 3 GREEN Bling', this.width / 2 + 25, y += lineHeight);
+  } else {
+    ctx.fillText('Now stash 3 ORANGE Bling', this.width / 2 + 25, y += lineHeight);
+  }
+  ctx.fillStyle = 'rgb(128, 0, 64)';
+  ctx.fillText('Spacebar to CONTINUE', this.width / 2 + 25, y += lineHeight);
+};
+
+//************************
+// Game Won Screen
+//************************
+
+var GameWonScreen = function(){
+  this.x = 25;
+  this.y = 200;
+  this.width = 455;
+  this.height = 250;
+  this.titleText = 'AWESOME!';
+  this.show = game.gameWon;
+};
+
+//------------------------
+// GameWonScreen.constructor()
+//------------------------
+
+GameWonScreen.prototype = new GameScreen();
+
+//------------------------
+// GameWonScreen.infoText()
+//------------------------
+
+GameWonScreen.prototype.infoText = function () {
+  var y = this.y;
+  var lineHeight = 50;
+  var lineExtraHeight = 70;
+  ctx.font = '48pt Wendy One';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'white';
+  ctx.fillText(this.titleText, this.width / 2 + 25, y += lineExtraHeight);
+  ctx.fillText('YOU WON', this.width / 2 + 25, y += lineExtraHeight);
+  ctx.font = '24pt Wendy One';
+  ctx.fillText('Your Score: ' + scoreBoard.score, this.width / 2, y += lineHeight);
+  ctx.fillStyle = 'rgb(128, 0, 64)';
+  ctx.fillText('Spacebar to PLAY AGAIN', this.width / 2 + 25, y += lineHeight);
+};
+
+
 
 //************************
 // scoreboard
@@ -1067,7 +1142,9 @@ var player = new Player();
 var scoreBoard = new ScoreBoard();
 var gameInfo = new GameInfo();
 var gameOverScreen = new GameOverScreen();
+var gameWonScreen = new GameWonScreen();
 var gamePausedScreen = new GamePausedScreen();
+var gameLevelUpScreen = new GameLevelUpScreen();
 var bling = [new Bling(), new Bling()];
 var dropZone = new DropZone();
 

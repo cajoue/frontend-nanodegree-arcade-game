@@ -94,9 +94,9 @@ var Engine = (function(global) {
      * render methods.
      */
     function updateEntities(dt) {
-        allEnemies.forEach(function(enemy) {
-            enemy.update(dt);
-        });
+        // allEnemies.forEach(function(enemy) {
+        //     enemy.update(dt);
+        // });
         player.update();
         bling.forEach(function(gem) {
             gem.update(dt);
@@ -147,7 +147,10 @@ var Engine = (function(global) {
         renderEntities();
         gameInfo.render();
         gameOverScreen.render();
+        gameWonScreen.render();
+        gameLevelUpScreen.render();
         gamePausedScreen.render();
+
 
     }
 
