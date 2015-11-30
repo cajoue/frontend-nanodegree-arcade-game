@@ -24,12 +24,12 @@ Game.ROW_HEIGHT = 83;
 Game.ROW_CENTER_Y = 21; // offset so that bugs run in centre of row
 Game.NUM_ROWS = 6;
 Game.NUM_COLS = 5;
-Game.MIN_BLING = 3; // number of gems in play
-Game.MIN_ENEMIES = 3;  // number of enemies in play
+Game.MIN_BLING = 3;     // number of gems in play
+Game.MIN_ENEMIES = 3;   // number of enemies in play
 Game.PLAYER_LIVES = 3;
 Game.LEVEL = 1;         // default game level - to be implemented
 Game.WIN = 3;           // number of levels
-Game.COLLECTION = 1;    // number of bling to collect
+Game.COLLECTION = 3;    // number of bling to collect
 Game.DEFAULT_COLLECTIBLE = 'images/gem-blue.png';
 
 //------------------------
@@ -104,7 +104,7 @@ Game.prototype.startNewLevel = function (level) {
 // Game.isLevelComplete()
 //------------------------
 
-// all lives lost and game is over
+// has the player completed the level
 Game.prototype.isLevelComplete = function (levelComplete) {
   if (levelComplete) {
     this.gameOver = false;
@@ -112,9 +112,8 @@ Game.prototype.isLevelComplete = function (levelComplete) {
     this.startScreen = false;
     this.paused = false;
     this.levelComplete = levelComplete;
-    //gameLevelUpScreen(this.level);
-    // console.log('- game.level = ' + game.level);
 
+    // has the player completed the final level
     if (game.level === Game.WIN) {
       game.gameWon = true;
       this.levelComplete = false;
@@ -124,7 +123,6 @@ Game.prototype.isLevelComplete = function (levelComplete) {
     }
   }
 };
-
 
 //------------------------
 // Game.randomise(first, last)
@@ -166,9 +164,7 @@ var Enemy = function() {
 Enemy.HIT_WIDTH = 75;
 Enemy.HIT_HEIGHT = 44;  // required for depth of bug
 Enemy.HIT_X = 11;       // x offset for visible part of tile
-
-// bug speed - want randomised 3, slow (1), med(2), fast(3)
-Enemy.MIN_SPEED = 100; // may increase if implement levels
+Enemy.MIN_SPEED = 100;  // slow speed for enemy bug
 
 //------------------------
 // Enemy.update(dt)
@@ -183,14 +179,14 @@ Enemy.prototype.update = function(dt) {
   // the new x position = old x + distance traveled in timeframe
   this.x = this.x + this.speed * dt;
 
-  // checkCollisions to see if hit player TODO: or player carrying gem
+  // checkCollisions to see if hit player
   if (this.checkCollisions()) {
     if (player.hasBling) {
-      scoreBoard.score -= 10; // lose 10 points
-      player.losesBling();      // drop bling
+      scoreBoard.score -= 10;     // lose 10 points
+      player.losesBling();        // drop bling
       dropZone.visible = false;
     } else {
-      scoreBoard.score --;            // lose a point
+      scoreBoard.score --;        // lose a point
     }
 
     game.playerLives --;            // lose a life
@@ -235,7 +231,6 @@ Enemy.prototype.reset = function() {
 // Enemy.checkCollisions()
 //------------------------
 
-//Enemy.prototype.checkCollisions = function(x, y, w, h, x2, y2, w2, h2) {};
 Enemy.prototype.checkCollisions = function() {
     if (this.x + Enemy.HIT_X < player.x + Player.HIT_X + Player.HIT_WIDTH &&
         this.x + Enemy.HIT_X + Enemy.HIT_WIDTH > player.x + Player.HIT_X &&
@@ -282,7 +277,7 @@ Player.prototype.initial = function() {
 //------------------------
 
 Player.prototype.update = function() {
-  // tbd
+  // didn't seem to need this other than to make engine.js happy
 };
 
 //------------------------
@@ -303,10 +298,8 @@ Player.prototype.handleInput = function(keyPress){
 
   // press spacebar to startNewGame from startScreen
   if (game.startScreen) {
-    // console.log('------ handle start screen ------');
     switch (keyPress) {
       case 'space':
-      // console.log('------ press space bar ------');
       game.startScreen = false;
       game.gameOn = true;
       gameInfo.show = game.startScreen;
@@ -318,10 +311,8 @@ Player.prototype.handleInput = function(keyPress){
 
   // press spacebar to startNewGame from gameOverScreen
   } else if (game.gameOver){
-    // console.log('------ handle game over screen ------');
     switch (keyPress) {
       case 'space':
-      // console.log('------ press space bar ------');
       game.gameOver = false;
       game.gameOn = true;
       gameOverScreen.show = game.gameOver;
@@ -338,10 +329,8 @@ Player.prototype.handleInput = function(keyPress){
 
     // press spacebar to startNewGame from gameWonScreen
   } else if (game.gameWon){
-      // console.log('------ handle game won screen ------');
       switch (keyPress) {
         case 'space':
-        // console.log('------ press space bar ------');
         game.gameWon = false;
         game.gameOn = true;
         gameWonScreen.show = game.gameWon;
@@ -358,35 +347,21 @@ Player.prototype.handleInput = function(keyPress){
 
     // press spacebar to level up
   } else if (game.levelComplete){
-    // console.log('------ handle level up screen ------');
     switch (keyPress) {
       case 'space':
-      // console.log('------ press space bar ------');
       game.levelComplete = false;
       game.gameOn = true;
       gameLevelUpScreen.show = game.levelComplete;
-      //game.startNewGame();
-      if (game.level + 1 > Game.WIN) {
-        // console.log('------  ***** you win ***** ------');
-      } else {
-        game.startNewLevel(game.level + 1);
-      }
-
+      game.startNewLevel(game.level + 1);
       break;
       default:
       return; // do nothing
     }
 
-
-  // press spacebar to unpause game from gamePausedScreen
+  // press spacebar to resume game from gamePausedScreen
   } else if (game.paused){
-    // console.log('------ handle paused screen ------');
-    // console.log('------ press space bar ------');
     game.paused = false;
     gamePausedScreen.show = false;
-
-
-
   } else {
 
     switch (keyPress) {
@@ -420,7 +395,6 @@ Player.prototype.handleInput = function(keyPress){
         }
 
         this.reset();
-        // scoreBoard.score ++;  // reached water add a point to score
 
         break;
       } else {
@@ -474,7 +448,7 @@ var Bling = function() {
   this.picked = false;
   this.dropped = false;
   this.delivered = false;
-  this.collected = false;     // if implement levels
+  this.collected = false;
 
   // delay appearance of bling
   this.delayCount = game.randomise(Bling.DELAY_MIN, Bling.DELAY_MAX);
@@ -622,7 +596,6 @@ Bling.prototype.update = function() {
 // Bling.checkCollisions()
 // returns string: 'ignore' 'pickup' 'delivered' ...
 //------------------------
-//TODO: rework this code into cases
 // Even though bling is static, check for player bumping into it as it is an array item
 Bling.prototype.checkCollisions = function() {
   // interactions with player
@@ -654,7 +627,7 @@ Bling.prototype.checkCollisions = function() {
         return 'ignore';
       }
     } // end pickup conditions
-  } // these must be false
+  } // end these must be false
   return 'ignore';
 }; // end checkCollisions
 
@@ -756,7 +729,7 @@ DropZone.prototype.update = function() {
 //------------------------
 // DropZone.reset()
 //------------------------
-// TODO: ?? maybe just do new instance ??
+
 DropZone.prototype.reset = function () {
   this.resetCount = DropZone.RESET_TIME;
   this.displayCount = DropZone.DISPLAY_TIME;
@@ -784,7 +757,6 @@ DropZone.prototype.show = function () {
 * If you omit the last three params, it will draw a rectangle
 * outline with a 5 pixel border radius
 */
-
 
 //************************
 // GameScreen message template
@@ -884,7 +856,7 @@ GameInfo.prototype.infoText = function () {
   ctx.fillText('Start with the BLUEs', this.width / 2, y += lineHeight);
 //  ctx.fillText('Rescue the Prince', this.width / 2, y += lineHeight); // if i only had more time sweet prince.
   ctx.fillText('!! Lose a point if a BUG hits you !!', this.width / 2, y += lineHeight);
-  ctx.fillText('! and lose BLING and lose a LIFE !', this.width / 2, y += lineHeight);
+  ctx.fillText('! Also lose BLING and a LIFE !', this.width / 2, y += lineHeight);
   ctx.font = '48pt Wendy One';
   ctx.fillText('On y va!!', this.width / 2, y += lineExtraHeight);
   ctx.font = '24pt Wendy One';
@@ -1032,9 +1004,9 @@ GameLevelUpScreen.prototype.infoText = function () {
 
 var GameWonScreen = function(){
   this.x = 25;
-  this.y = 200;
+  this.y = 150;
   this.width = 455;
-  this.height = 250;
+  this.height = 330;
   this.titleText = 'AWESOME!';
   this.show = game.gameWon;
 };
@@ -1061,9 +1033,9 @@ GameWonScreen.prototype.infoText = function () {
   ctx.font = '24pt Wendy One';
   ctx.fillText('Your Score: ' + scoreBoard.score, this.width / 2, y += lineHeight);
   ctx.fillStyle = 'rgb(128, 0, 64)';
+  ctx.fillText('Press i for Info', this.width / 2 + 25, y += lineHeight);
   ctx.fillText('Spacebar to PLAY AGAIN', this.width / 2 + 25, y += lineHeight);
 };
-
 
 
 //************************
@@ -1078,12 +1050,12 @@ var ScoreBoard = function(){
 // ScoreBoard CONSTANTS
 //------------------------
 
-ScoreBoard.X = 10;        // Score position
-ScoreBoard.Y = 40;        // y position below title
-ScoreBoard.LIFE_X = 250;  // to centre on screen based on 3 lives
-ScoreBoard.LIFE_Y = -4;  // to take account of blank space at top
-ScoreBoard.BLING_X = 390; // x position of collected bling
-ScoreBoard.BLING_Y = -10;  // to take account of blank space at top
+ScoreBoard.X = 10;          // Score position
+ScoreBoard.Y = 40;          // y position below title
+ScoreBoard.LIFE_X = 250;    // to centre on screen based on 3 lives
+ScoreBoard.LIFE_Y = -4;     // to take account of blank space at top
+ScoreBoard.BLING_X = 390;   // x position of collected bling
+ScoreBoard.BLING_Y = -10;   // to take account of blank space at top
 
 
 //------------------------
