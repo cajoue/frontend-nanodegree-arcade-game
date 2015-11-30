@@ -26,6 +26,9 @@ Game.NUM_COLS = 5;
 Game.MIN_BLING = 3; // number of gems in play
 Game.MIN_ENEMIES = 3;  // number of enemies in play
 Game.PLAYER_LIVES = 3;
+Game.LEVEL = 1;         // default game level - to be implemented
+Game.COLLECTION = 3;    // number of bling to collect
+Game.DEFAULT_COLLECTIBLE = 'images/gem-blue.png';
 
 //------------------------
 // Game.isGameOver()
@@ -63,13 +66,35 @@ Game.prototype.isPaused = function (pause) {
 
 // Start a new game
 Game.prototype.startNewGame = function () {
+  this.level = Game.LEVEL;
+  scoreBoard = new ScoreBoard();
+  this.startNewLevel(this.level);
+};
+
+//------------------------
+// Game.startNewLevel()
+//------------------------
+
+// Start a new game
+Game.prototype.startNewLevel = function (level) {
   this.playerLives = Game.PLAYER_LIVES;
+  this.level = level;
+  this.collection = 0;
   this.paused = false;
   player = new Player();
-  scoreBoard = new ScoreBoard();
   dropZone = new DropZone();
   allEnemies = [new Enemy(), new Enemy(), new Enemy()];
   bling = [new Bling(), new Bling()];
+  if (level === 2) {
+    scoreBoard.collectible = 'images/gem-green.png';
+    scoreBoard.collect = 'green';
+  } else if (level === 3) {
+    scoreBoard.collectible = 'images/gem-orange.png';
+    scoreBoard.collect = 'orange';
+  } else {
+    scoreBoard.collectible = 'images/gem-blue.png';
+    scoreBoard.collect = 'blue';
+  }
 };
 
 //------------------------
@@ -408,8 +433,9 @@ var Bling = function() {
 
   // select random gem from array
   // want greater number of blues to greens to oranges
-  var colour = ['blue', 'blue', 'blue', 'green', 'green', 'orange'];
-  this.gem = 'images/gem-' + colour[game.randomise(0, 5)] + '.png';
+  var colours = ['blue', 'blue', 'blue', 'green', 'green', 'orange'];
+  this.colour = colours[game.randomise(0, 5)];
+  this.gem = 'images/gem-' + this.colour + '.png';
 
   // ideas: //
   // bling to time out (kind of does as is linked to dropZone)
@@ -476,6 +502,8 @@ Bling.prototype.update = function() {
       console.log(' - player.hasBling = ' + player.hasBling);
       console.log(' - player.dropsBling = ' + player.dropsBling);
       console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
+      console.log(' - this.colour = ' + this.colour);
+      console.log(' - scoreBoard.collect = ' + scoreBoard.collect);
       console.log('------ Actions ------');
       this.resetCount --;
       this.delivered = false;
@@ -530,6 +558,9 @@ Bling.prototype.update = function() {
         this.picked = false;
         this.delivered = true;
         dropZone.dropReceived = true;
+        if (this.colour === scoreBoard.collect) {
+          scoreBoard.collection ++;
+        }
         player.hasBling = false;
         scoreBoard.score += 10;
         this.resetCount = Bling.RESET_TIME;
@@ -702,8 +733,9 @@ DropZone.prototype.update = function() {
     console.log(' - player.dropsBling = ' + player.dropsBling);
     console.log(' - dropZone.dropReceived = ' + dropZone.dropReceived);
     console.log('------ Actions ------');
-    player.dropsBling = true;
-    player.hasBling = false;  // was true
+    //player.dropsBling = true;
+    //player.hasBling = false;  // was true
+    player.losesBling();
     this.displayCount --;
     console.log(' - player.hasBling = ' + player.hasBling);
     console.log(' - player.dropsBling = ' + player.dropsBling);
@@ -964,12 +996,36 @@ GamePausedScreen.prototype.infoText = function () {
 //************************
 
 var ScoreBoard = function(){
-  this.x = 10;
-  this.lifeX = 200; // to centre on screen based on 3 lives
-  this.y = 40;
-  this.lifeY = -10; // to take account of blank space at top
+  this.initial();
+};
+
+//------------------------
+// ScoreBoard CONSTANTS
+//------------------------
+
+ScoreBoard.X = 10;        // Score position
+ScoreBoard.Y = 40;        // y position below title
+ScoreBoard.LIFE_X = 250;  // to centre on screen based on 3 lives
+ScoreBoard.LIFE_Y = -4;  // to take account of blank space at top
+ScoreBoard.BLING_X = 390; // x position of collected bling
+ScoreBoard.BLING_Y = -10;  // to take account of blank space at top
+
+
+//------------------------
+// ScoreBoard.render()
+//------------------------
+
+ScoreBoard.prototype.initial = function () {
+  this.x = ScoreBoard.X;
+  this.y = ScoreBoard.Y;
+  this.lifeX = ScoreBoard.LIFE_X;
+  this.lifeY = ScoreBoard.LIFE_Y;
+  this.blingX = ScoreBoard.BLING_X;
+  this.blingY = ScoreBoard.BLING_Y;
   this.score = 0;
   this.sprite = 'images/Heart.png';
+  this.collectible = Game.DEFAULT_COLLECTIBLE;
+  this.collection = 0;
 };
 
 //------------------------
@@ -987,11 +1043,16 @@ ScoreBoard.prototype.render = function () {
 
   // show lives remaining
   var spriteHeart = Resources.get(this.sprite);
-  var spriteWidth = spriteHeart.width * 0.4;
-  var spriteHeight = spriteHeart.height * 0.4;
+  var spriteWidth = spriteHeart.width * 0.35;
+  var spriteHeight = spriteHeart.height * 0.35;
   // render one for each life
   for (var i = 0; i < game.playerLives; i++) {
     ctx.drawImage(spriteHeart, this.lifeX + i * spriteWidth, this.lifeY, spriteWidth, spriteHeight);
+  }
+  // show bling collected
+  var spriteBling = Resources.get(this.collectible);
+  for (var i = 0; i < this.collection; i++) {
+    ctx.drawImage(spriteBling, this.blingX + i * spriteWidth, this.blingY, spriteWidth, spriteHeight);
   }
 };
 
