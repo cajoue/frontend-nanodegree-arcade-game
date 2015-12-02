@@ -50,8 +50,9 @@ I had such plans... but it was tough going at times. It's not the game I'd hoped
 
 Game engine.js and resources.js by Udacity
 
-
 ### Learning Resources
+
+My Code Reviewer - Sandeep :)
 
 JavaScript by
 [Codecademy](https://www.codecademy.com/learn/javascript)

@@ -2,11 +2,6 @@
 // Game
 //************************
 
-// it's getting a little muddied up so want to declare some constants and
-// resuable functions - should make things easier to read later.
-// the reworking was a nightmare - but threw up some essential fixes!
-// So now, the constants are capitalised and outside the class definitions
-
 var Game = function(){
   this.gameOn = false;
   this.startScreen = true;
@@ -18,19 +13,19 @@ var Game = function(){
 //------------------------
 // Game CONSTANTS
 //------------------------
-Game.TILE_WIDTH = 101;
-Game.TILE_HEIGHT = 171;
-Game.ROW_HEIGHT = 83;
-Game.ROW_CENTER_Y = 21; // offset so that bugs run in centre of row
-Game.NUM_ROWS = 6;
-Game.NUM_COLS = 5;
-Game.MIN_BLING = 3;     // number of gems in play
-Game.MIN_ENEMIES = 3;   // number of enemies in play
-Game.PLAYER_LIVES = 3;
-Game.LEVEL = 1;         // default game level - to be implemented
-Game.WIN = 3;           // number of levels
-Game.COLLECTION = 3;    // number of bling to collect
-Game.DEFAULT_COLLECTIBLE = 'images/gem-blue.png';
+Game.prototype.TILE_WIDTH = 101;
+Game.prototype.TILE_HEIGHT = 171;
+Game.prototype.ROW_HEIGHT = 83;
+Game.prototype.ROW_CENTER_Y = 21; // offset so that bugs run in centre of row
+Game.prototype.NUM_ROWS = 6;
+Game.prototype.NUM_COLS = 5;
+Game.prototype.MIN_BLING = 3;     // number of gems in play
+Game.prototype.MIN_ENEMIES = 3;   // number of enemies in play
+Game.prototype.PLAYER_LIVES = 3;
+Game.prototype.LEVEL = 1;         // default game level
+Game.prototype.WIN = 3;           // number of levels
+Game.prototype.COLLECTION = 3;    // number of bling to collect
+Game.prototype.DEFAULT_COLLECTIBLE = 'images/gem-blue.png';
 
 //------------------------
 // Game.isGameOver()
@@ -38,12 +33,12 @@ Game.DEFAULT_COLLECTIBLE = 'images/gem-blue.png';
 
 // all lives lost and game is over
 Game.prototype.isGameOver = function (gameOver) {
-  if (gameOver) {
+  if (gameOver === true) {
     this.gameOver = gameOver;
     this.gameOn = false;
     this.startScreen = false;
     this.paused = true;
-    gameOverScreen.show = game.gameOver;
+    gameOverScreen.show = this.gameOver;
   }
 };
 
@@ -53,7 +48,7 @@ Game.prototype.isGameOver = function (gameOver) {
 
 // spacebar has been pressed to pause game
 Game.prototype.isPaused = function (pause) {
-  if (pause) {
+  if (pause === true) {
     this.gameOver = false;
     this.gameOn = false;
     this.startScreen = false;
@@ -68,7 +63,7 @@ Game.prototype.isPaused = function (pause) {
 
 // Start a new game
 Game.prototype.startNewGame = function () {
-  this.level = Game.LEVEL;
+  this.level = this.LEVEL;
   scoreBoard = new ScoreBoard();
   this.startNewLevel(this.level);
 };
@@ -79,14 +74,20 @@ Game.prototype.startNewGame = function () {
 
 // Start a new game
 Game.prototype.startNewLevel = function (level) {
-  this.playerLives = Game.PLAYER_LIVES;
+  this.playerLives = this.PLAYER_LIVES;
   this.level = level;
-  scoreBoard.collection = 0;
   this.paused = false;
+  scoreBoard.collection = 0;
   player = new Player();
   dropZone = new DropZone();
-  allEnemies = [new Enemy(), new Enemy(), new Enemy()];
-  bling = [new Bling(), new Bling()];
+  allEnemies = [];
+  bling = [];
+  for(var i = 0; i < this.MIN_ENEMIES; i++) {
+    allEnemies.push(new Enemy());
+  }
+  for(var i = 0; i < this.MIN_BLING; i++) {
+    bling.push(new Bling());
+  }
   gameLevelUpScreen = new GameLevelUpScreen(level);
   if (this.level === 2) {
     scoreBoard.collectible = 'images/gem-green.png';
@@ -106,7 +107,7 @@ Game.prototype.startNewLevel = function (level) {
 
 // has the player completed the level
 Game.prototype.isLevelComplete = function (levelComplete) {
-  if (levelComplete) {
+  if (levelComplete === true) {
     this.gameOver = false;
     this.gameOn = false;
     this.startScreen = false;
@@ -114,10 +115,10 @@ Game.prototype.isLevelComplete = function (levelComplete) {
     this.levelComplete = levelComplete;
 
     // has the player completed the final level
-    if (game.level === Game.WIN) {
-      game.gameWon = true;
+    if (this.level === this.WIN) {
+      this.gameWon = true;
       this.levelComplete = false;
-      gameWonScreen.show = game.gameWon;
+      gameWonScreen.show = this.gameWon;
     } else {
       gameLevelUpScreen.show = this.levelComplete;
     }
@@ -141,19 +142,12 @@ Game.prototype.randomise = function (first, last) {
 
 // Enemies our player must avoid
 var Enemy = function() {
-  // all bugs enter from left off canvas
-  this.x = - Game.TILE_WIDTH;
-  // bugs run in random row
-  this.y = game.randomise(1, 3) * Game.ROW_HEIGHT - Game.ROW_CENTER_Y ;
-
   // tile size if necessary
-   this.width = Game.TILE_WIDTH;
-   this.height = Game.TILE_HEIGHT;
-
-  // bug speed - want randomised 3, slow (1), med(2), fast(3)
-  this.speed = game.randomise(1, 3) * Enemy.MIN_SPEED;
+  this.width = game.TILE_WIDTH;
+  this.height = game.TILE_HEIGHT;
 
   this.sprite = 'images/enemy-bug.png';
+  this.reset();
 };
 
 //------------------------
@@ -161,10 +155,10 @@ var Enemy = function() {
 //------------------------
 
 // sprite target dimensions (visible part of tile)
-Enemy.HIT_WIDTH = 75;
-Enemy.HIT_HEIGHT = 44;  // required for depth of bug
-Enemy.HIT_X = 11;       // x offset for visible part of tile
-Enemy.MIN_SPEED = 100;  // slow speed for enemy bug
+Enemy.prototype.HIT_WIDTH = 75;
+Enemy.prototype.HIT_HEIGHT = 44;  // required for depth of bug
+Enemy.prototype.HIT_X = 11;       // x offset for visible part of tile
+Enemy.prototype.MIN_SPEED = 100;  // slow speed for enemy bug
 
 //------------------------
 // Enemy.update(dt)
@@ -180,8 +174,8 @@ Enemy.prototype.update = function(dt) {
   this.x = this.x + this.speed * dt;
 
   // checkCollisions to see if hit player
-  if (this.checkCollisions()) {
-    if (player.hasBling) {
+  if (this.checkCollisions() === true) {
+    if (player.hasBling === true) {
       scoreBoard.score -= 10;     // lose 10 points
       player.losesBling();        // drop bling
       dropZone.visible = false;
@@ -195,11 +189,11 @@ Enemy.prototype.update = function(dt) {
     }
 
     player.reset();                 // reset player
-    this.x = this.reset();          // reset this bug
+    this.reset();                   // reset this bug
   }
 
   if (this.x > 505) {               // if out of bounds reset bug
-    this.x = this.reset();
+    this.reset();
   }
 };
 
@@ -218,13 +212,12 @@ Enemy.prototype.render = function() {
 
 // Enemy reset. delete from array once off screen
 Enemy.prototype.reset = function() {
-  var i = allEnemies.indexOf(this);       // find this instance of bug
-  if (i != -1) {
-    allEnemies.splice(i, 1);              // delete it
-    if (allEnemies.length < Game.MIN_ENEMIES) {
-      allEnemies.push(new Enemy());       // push new bug to array
-    }
-  }
+  // all bugs enter from left off canvas
+  this.x = - game.TILE_WIDTH;
+  // bugs run in random row
+  this.y = game.randomise(1, 3) * game.ROW_HEIGHT - game.ROW_CENTER_Y;
+  // bug speed - want randomised 3, slow (1), med(2), fast(3)
+  this.speed = game.randomise(1, 3) * this.MIN_SPEED;
 };
 
 //------------------------
@@ -232,10 +225,10 @@ Enemy.prototype.reset = function() {
 //------------------------
 
 Enemy.prototype.checkCollisions = function() {
-    if (this.x + Enemy.HIT_X < player.x + Player.HIT_X + Player.HIT_WIDTH &&
-        this.x + Enemy.HIT_X + Enemy.HIT_WIDTH > player.x + Player.HIT_X &&
-        this.y < player.y + Player.HIT_HEIGHT &&
-        Enemy.HIT_HEIGHT + this.y > player.y) {
+    if (this.x + this.HIT_X < player.x + player.HIT_X + player.HIT_WIDTH &&
+        this.x + this.HIT_X + this.HIT_WIDTH > player.x + player.HIT_X &&
+        this.y < player.y + player.HIT_HEIGHT &&
+        this.HIT_HEIGHT + this.y > player.y) {
     // collision detected!
     return true;
   }
@@ -256,9 +249,9 @@ var Player = function() {
 //------------------------
 
 // target sprite dimensions (visible area)
-Player.HIT_WIDTH = 70;
-Player.HIT_HEIGHT = 80;
-Player.HIT_X = 15;     // x offset for visible area
+Player.prototype.HIT_WIDTH = 70;
+Player.prototype.HIT_HEIGHT = 80;
+Player.prototype.HIT_X = 15;     // x offset for visible area
 
 //------------------------
 // Player.initial()
@@ -297,7 +290,7 @@ Player.prototype.handleInput = function(keyPress){
   // when player reaches water add 1 point and reset start position
 
   // press spacebar to startNewGame from startScreen
-  if (game.startScreen) {
+  if (game.startScreen === true) {
     switch (keyPress) {
       case 'space':
       game.startScreen = false;
@@ -306,11 +299,11 @@ Player.prototype.handleInput = function(keyPress){
       game.startNewGame();
       break;
       default:
-      return; // do nothing
+      break; // do nothing
     }
 
   // press spacebar to startNewGame from gameOverScreen
-  } else if (game.gameOver){
+  } else if (game.gameOver === true){
     switch (keyPress) {
       case 'space':
       game.gameOver = false;
@@ -324,11 +317,11 @@ Player.prototype.handleInput = function(keyPress){
       gameInfo.showScreen();
       break;
       default:
-      return; // do nothing
+      break; // do nothing
     }
 
     // press spacebar to startNewGame from gameWonScreen
-  } else if (game.gameWon){
+  } else if (game.gameWon === true){
       switch (keyPress) {
         case 'space':
         game.gameWon = false;
@@ -342,11 +335,11 @@ Player.prototype.handleInput = function(keyPress){
         gameInfo.showScreen();
         break;
         default:
-        return; // do nothing
+        break; // do nothing
       }
 
     // press spacebar to level up
-  } else if (game.levelComplete){
+  } else if (game.levelComplete === true){
     switch (keyPress) {
       case 'space':
       game.levelComplete = false;
@@ -355,11 +348,11 @@ Player.prototype.handleInput = function(keyPress){
       game.startNewLevel(game.level + 1);
       break;
       default:
-      return; // do nothing
+      break; // do nothing
     }
 
   // press spacebar to resume game from gamePausedScreen
-  } else if (game.paused){
+  } else if (game.paused === true){
     game.paused = false;
     gamePausedScreen.show = false;
   } else {
@@ -370,46 +363,44 @@ Player.prototype.handleInput = function(keyPress){
       gamePausedScreen.show = true;
       break;
       case 'left':        // to move left in bounds
-      if (this.x - Game.TILE_WIDTH < 0) {
+      if (this.x - game.TILE_WIDTH < 0) {
         break;
       } else {
-        this.x -= Game.TILE_WIDTH;
+        this.x -= game.TILE_WIDTH;
       }
       break;
       case 'right':       // to move right in bounds
-      if (this.x + Game.TILE_WIDTH >= 505) {
+      if (this.x + game.TILE_WIDTH >= 505) {
         break;
       } else {
-        this.x += Game.TILE_WIDTH;
+        this.x += game.TILE_WIDTH;
       }
       break;
       case 'up':          // to move up in bounds, reach water, reset position
-      if (this.y - Game.ROW_HEIGHT < 0) {
+      if (this.y - game.ROW_HEIGHT < 0) {
         // don't jump in water with bling
-        if (this.hasBling) {
+        if (this.hasBling === true) {
           scoreBoard.score -= 5; // lose 10 points
           this.losesBling();      // drop bling
           dropZone.visible = false;
         } else {
           scoreBoard.score ++;     // reached water add a point to score
         }
-
         this.reset();
-
         break;
       } else {
-        this.y -= Game.ROW_HEIGHT;
+        this.y -= game.ROW_HEIGHT;
       }
       break;
       case 'down':       // to move down in bounds
-      if (this.y + Game.ROW_HEIGHT > 394) {
+      if (this.y + game.ROW_HEIGHT > 394) {
         break;
       } else {
-        this.y += Game.ROW_HEIGHT;
+        this.y += game.ROW_HEIGHT;
       }
       break;
       default:
-      return;
+      break;
     }
   }
 };
@@ -420,8 +411,8 @@ Player.prototype.handleInput = function(keyPress){
 
 Player.prototype.reset = function(dt) {
     // randomise start position and centre in tile
-  this.x = game.randomise(0, 4) * Game.TILE_WIDTH;
-  this.y = (Game.NUM_ROWS - 1) * Game.ROW_HEIGHT - Game.ROW_CENTER_Y;
+  this.x = game.randomise(0, 4) * game.TILE_WIDTH;
+  this.y = (game.NUM_ROWS - 1) * game.ROW_HEIGHT - game.ROW_CENTER_Y;
 };
 
 //------------------------
@@ -441,42 +432,20 @@ Player.prototype.losesBling = function() {
 
 // Bling our player must collect
 var Bling = function() {
-  // initial state of bling // TODO: maybe create an initiate method
-  this.visible = false;
-
-  // bling picked up, dropped, delivered, collected
-  this.picked = false;
-  this.dropped = false;
-  this.delivered = false;
-  this.collected = false;
-
-  // delay appearance of bling
-  this.delayCount = game.randomise(Bling.DELAY_MIN, Bling.DELAY_MAX);
-  // for reset after delivery - fade time shorter than dropzone fade
-  this.resetCount = 0;
-
   // sprite dimensions (might also work as hit dimensions)
-  this.width = Game.TILE_WIDTH * Bling.SHRINK;
-  this.height = Game.TILE_HEIGHT * Bling.SHRINK;
+  this.width = game.TILE_WIDTH * this.SHRINK;
+  this.height = game.TILE_HEIGHT * this.SHRINK;
   // offset to centre bling on tile
-  this.offsetX = (Game.TILE_WIDTH - this.width) / 2;
+  this.offsetX = (game.TILE_WIDTH - this.width) / 2;
 
   // sprite dimensions if (this.picked)
-  this.pickWidth = Game.TILE_WIDTH * Bling.SHRINKMORE;
-  this.pickHeight = Game.TILE_HEIGHT * Bling.SHRINKMORE;
+  this.pickWidth = game.TILE_WIDTH * this.SHRINKMORE;
+  this.pickHeight = game.TILE_HEIGHT * this.SHRINKMORE;
   // offset to position picked up bling
-  this.pickX = (Game.TILE_WIDTH - this.pickWidth) / 2;
+  this.pickX = (game.TILE_WIDTH - this.pickWidth) / 2;
   this.pickY = (this.height);
 
-  // bling to appear in random places (same rows as bugs)
-  this.x = game.randomise(0, 4) * Game.TILE_WIDTH + this.offsetX;
-  this.y = game.randomise(1, 3) * Game.ROW_HEIGHT + Game.ROW_CENTER_Y ;
-
-  // select random gem from array
-  // want greater number of blues to greens to oranges
-  var colours = ['blue', 'blue', 'blue', 'green', 'green', 'orange'];
-  this.colour = colours[game.randomise(0, 5)];
-  this.gem = 'images/gem-' + this.colour + '.png';
+  this.initial();
 
   // ideas: //
   // bling to time out (kind of does as is linked to dropZone)
@@ -486,21 +455,20 @@ var Bling = function() {
 //------------------------
 // Bling constants
 // it appears that defining the constants outside the class works better
-// for example in Bling.Update
-//    this.resetCount = Bling.RESET_TIME;  === 15
-// but
-//    this.resetCount = this.resetTime;  is undefined.
 //------------------------
 
-Bling.RESET_TIME = 15;    // reset after delivery - fade time shorter than dropzone fade
-Bling.SHRINK = 0.6;      // Draw the bling - smaller - it is huge!
-Bling.SHRINKMORE = 0.3;  // Resize for bling when picked up
+Bling.prototype.RESET_TIME = 15;    // reset after delivery - fade time shorter than dropzone fade
+Bling.prototype.SHRINK = 0.6;      // Draw the bling - smaller - it is huge!
+Bling.prototype.SHRINKMORE = 0.3;  // Resize for bling when picked up
 
-Bling.DELAY_MIN = 20;   // delay appearance of bling
-Bling.DELAY_MAX = 200;
+Bling.prototype.DELAY_MIN = 100;   // delay appearance of bling
+Bling.prototype.DELAY_MAX = 600;
 
 // HIT_HEIGHT defined for collisions with player
-Bling.HIT_HEIGHT = 40;      // moved to bling contants
+Bling.prototype.HIT_HEIGHT = 40;      // moved to bling contants
+
+// want greater number of blues to greens to oranges
+Bling.prototype.COLOURS = ['blue', 'blue', 'blue', 'green', 'green', 'orange'];
 
 //------------------------
 // Bling.render()
@@ -509,11 +477,11 @@ Bling.HIT_HEIGHT = 40;      // moved to bling contants
 Bling.prototype.render = function() {
 
   // render when made visible after initial delay
-  if (this.visible) {
-    if (this.picked) {
+  if (this.visible === true) {
+    if (this.picked === true) {
       // player carries smallest gem size
       ctx.drawImage(Resources.get(this.gem), player.x + this.pickX, player.y + this.pickY, this.pickWidth, this.pickHeight);
-    } else if (this.delivered) {
+    } else if (this.delivered === true) {
       // gem takes the player location as its own position
       ctx.drawImage(Resources.get(this.gem), dropZone.x + this.offsetX, dropZone.y, this.width, this.height);
     } else {
@@ -529,14 +497,14 @@ Bling.prototype.render = function() {
 
 Bling.prototype.update = function() {
   // begin checkCollisions
-  if (this.visible) {
+  if (this.visible === true) {
 
   if (this.resetCount > 1) {
       this.resetCount --;
   } else
 
     if (this.resetCount === 1) {
-      game.isLevelComplete(scoreBoard.collection === Game.COLLECTION);
+      game.isLevelComplete(scoreBoard.collection === game.COLLECTION);
       this.resetCount --;
       this.delivered = false;
       this.reset();
@@ -564,7 +532,7 @@ Bling.prototype.update = function() {
         dropZone.dropReceived = true;
         player.hasBling = false;
         scoreBoard.score += 10;
-        this.resetCount = Bling.RESET_TIME;
+        this.resetCount = this.RESET_TIME;
         if (this.colour === scoreBoard.collect) {
           scoreBoard.collection ++;
         }
@@ -578,7 +546,7 @@ Bling.prototype.update = function() {
         this.reset();
         break;
       default:
-        return;
+        break;
     } // end of switch
 
   } // end of bling visible = true;
@@ -606,9 +574,9 @@ Bling.prototype.checkCollisions = function() {
   if (!this.delivered && !this.dropped && !player.dropsBling) {
     // conditions for delivery in dropZone
     if (this.picked && player.hasBling && dropZone.visible) {
-      if (dropZone.x < player.x + Player.HIT_X + Player.HIT_WIDTH &&
-          dropZone.x + dropZone.width > player.x + Player.HIT_X &&
-          dropZone.y < player.y + Player.HIT_HEIGHT &&
+      if (dropZone.x < player.x + player.HIT_X + player.HIT_WIDTH &&
+          dropZone.x + dropZone.width > player.x + player.HIT_X &&
+          dropZone.y < player.y + player.HIT_HEIGHT &&
           dropZone.height + dropZone.y > player.y) {
         // collision detected!
         return 'delivered';
@@ -617,10 +585,10 @@ Bling.prototype.checkCollisions = function() {
 
     // conditions for pickup
     if (!this.picked && !player.hasBling && !dropZone.dropReceived && !dropZone.visible) {
-      if (this.x < player.x + Player.HIT_X + Player.HIT_WIDTH &&
-          this.x + this.width > player.x + Player.HIT_X &&
-          this.y < player.y + Player.HIT_HEIGHT &&
-          Bling.HIT_HEIGHT + this.y > player.y) {
+      if (this.x < player.x + player.HIT_X + player.HIT_WIDTH &&
+          this.x + this.width > player.x + player.HIT_X &&
+          this.y < player.y + player.HIT_HEIGHT &&
+          this.HIT_HEIGHT + this.y > player.y) {
         // collision detected!
         return 'pickup';
       } else {
@@ -636,17 +604,39 @@ Bling.prototype.checkCollisions = function() {
 //------------------------
 
 Bling.prototype.reset = function () {
-  // find index of this instance and delete it
-  var i = bling.indexOf(this);
-  if (i != -1) {
-    bling.splice(i, 1);
-
-  // keep the bling array topped up with new bling
-    while (bling.length < Game.MIN_BLING) {
-      bling.push(new Bling());
-    }
-  }
+  // reset to randomise the bling position and color
+  // reset all states too (visible, picked, timer etc)
+  this.initial();
 };
+
+//------------------------
+// Bling.initial()
+//------------------------
+
+Bling.prototype.initial = function () {
+  // initial state of bling
+  this.visible = false;
+
+  // bling picked up, dropped, delivered, collected
+  this.picked = false;
+  this.dropped = false;
+  this.delivered = false;
+  this.collected = false;
+
+  // delay appearance of bling
+  this.delayCount = game.randomise(this.DELAY_MIN, this.DELAY_MAX);
+  // for reset after delivery - fade time shorter than dropzone fade
+  this.resetCount = 0;
+
+  // bling to appear in random places (same rows as bugs)
+  this.x = game.randomise(0, 4) * game.TILE_WIDTH + this.offsetX;
+  this.y = game.randomise(1, 3) * game.ROW_HEIGHT + game.ROW_CENTER_Y ;
+
+  // select random gem from array
+  this.colour = this.COLOURS[game.randomise(0, 5)];
+  this.gem = 'images/gem-' + this.colour + '.png';
+};
+
 
 //------------------------
 // Bling.show()
@@ -672,11 +662,11 @@ var DropZone = function() {
   this.reset();
 
   // bling to appear in random places (grass rows)
-  this.x = game.randomise(0, 4) * Game.TILE_WIDTH;
-  this.y = game.randomise(4, 5) * Game.ROW_HEIGHT + Game.ROW_CENTER_Y ;
+  this.x = game.randomise(0, 4) * game.TILE_WIDTH;
+  this.y = game.randomise(4, 5) * game.ROW_HEIGHT + game.ROW_CENTER_Y ;
 
-  this.width = Game.TILE_WIDTH;
-  this.height = Game.ROW_HEIGHT;
+  this.width = game.TILE_WIDTH;
+  this.height = game.ROW_HEIGHT;
   this.sprite = 'images/Selector.png';
 };
 
@@ -684,15 +674,15 @@ var DropZone = function() {
 // DropZone CONSTANTS
 //------------------------
 
-DropZone.DISPLAY_TIME = 200; // for visibility timer
-DropZone.RESET_TIME = 20; // for reset fade time
+DropZone.prototype.DISPLAY_TIME = 200; // for visibility timer
+DropZone.prototype.RESET_TIME = 20; // for reset fade time
 
 //------------------------
 // DropZone.render()
 //------------------------
 
 DropZone.prototype.render = function() {
-  if (this.visible) {
+  if (this.visible  === true) {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y, this.width, this.height);
   }
 };
@@ -731,8 +721,8 @@ DropZone.prototype.update = function() {
 //------------------------
 
 DropZone.prototype.reset = function () {
-  this.resetCount = DropZone.RESET_TIME;
-  this.displayCount = DropZone.DISPLAY_TIME;
+  this.resetCount = this.RESET_TIME;
+  this.displayCount = this.DISPLAY_TIME;
 };
 
 //------------------------
@@ -764,11 +754,13 @@ DropZone.prototype.show = function () {
 
 var GameScreen = function() {
   // match size and position of initial game screen
+  // have had to use Game.TILE_WIDTH as game.TILE_WIDTH throws error
+  // same for Game.NUM_COLS and Game.LEVEL
   this.x = GameScreen.X;
   this.y = GameScreen.Y;
-  this.width = Game.TILE_WIDTH * Game.NUM_COLS;
+  this.width = game.TILE_WIDTH * game.NUM_COLS;
   this.height = GameScreen.HEIGHT;
-  this.level = Game.LEVEL;
+  this.level = game.LEVEL;
   this.show = false;
 };
 
@@ -785,7 +777,7 @@ GameScreen.HEIGHT = 536;
 //------------------------
 
 GameScreen.prototype.render = function () {
-  if (this.show) {
+  if (this.show  === true) {
     this.drawScreen(this.x, this.y, this.width, this.height);
     this.infoText();
     game.paused = true;
@@ -826,16 +818,20 @@ GameScreen.prototype.drawScreen = function (x, y, width, height) {
 
 // this is the information startScreen
 var GameInfo = function(){
+  GameScreen.call(this);
   this.y = GameScreen.Y;
   this.titleText = 'How To Play';
   this.show = game.startScreen;
 };
 
+
 //------------------------
 // GameInfo.constructor()
 //------------------------
 
-GameInfo.prototype = new GameScreen();
+// from review
+GameInfo.prototype = Object.create(GameScreen.prototype);
+GameInfo.prototype.constructor = GameInfo;
 
 //------------------------
 // GameInfo.infoText()
@@ -886,6 +882,7 @@ GameInfo.prototype.showScreen = function () {
 //************************
 
 var GameOverScreen = function(){
+  GameScreen.call(this);
   this.x = 25;
   this.y = 200;
   this.width = 455;
@@ -898,7 +895,9 @@ var GameOverScreen = function(){
 // GameOverScreen.constructor()
 //------------------------
 
-GameOverScreen.prototype = new GameScreen();
+// from review
+GameOverScreen.prototype = Object.create(GameScreen.prototype);
+GameOverScreen.prototype.constructor = GameOverScreen;
 
 //------------------------
 // GameOverScreen.infoText()
@@ -925,6 +924,7 @@ GameOverScreen.prototype.infoText = function () {
 //************************
 
 var GamePausedScreen = function(){
+  GameScreen.call(this);
   this.x = 25;
   this.y = 200;
   this.width = 455;
@@ -937,7 +937,8 @@ var GamePausedScreen = function(){
 // GamePausedScreen.constructor()
 //------------------------
 
-GamePausedScreen.prototype = new GameScreen();
+GamePausedScreen.prototype = Object.create(GameScreen.prototype);
+GamePausedScreen.prototype.constructor = GamePausedScreen;
 
 //------------------------
 // GamePausedScreen.infoText()
@@ -961,6 +962,7 @@ GamePausedScreen.prototype.infoText = function () {
 //************************
 
 var GameLevelUpScreen = function(level){
+  GameScreen.call(this);
   this.x = 25;
   this.y = 200;
   this.width = 455;
@@ -974,7 +976,8 @@ var GameLevelUpScreen = function(level){
 // GameLevelUp.constructor()
 //------------------------
 
-GameLevelUpScreen.prototype = new GameScreen();
+GameLevelUpScreen.prototype = Object.create(GameScreen.prototype);
+GameLevelUpScreen.prototype.constructor = GameLevelUpScreen;
 
 //------------------------
 // GameLevelUp.infoText()
@@ -1003,6 +1006,7 @@ GameLevelUpScreen.prototype.infoText = function () {
 //************************
 
 var GameWonScreen = function(){
+  GameScreen.call(this);
   this.x = 25;
   this.y = 150;
   this.width = 455;
@@ -1015,7 +1019,8 @@ var GameWonScreen = function(){
 // GameWonScreen.constructor()
 //------------------------
 
-GameWonScreen.prototype = new GameScreen();
+GameWonScreen.prototype = Object.create(GameScreen.prototype);
+GameWonScreen.prototype.constructor = GameWonScreen;
 
 //------------------------
 // GameWonScreen.infoText()
@@ -1050,12 +1055,12 @@ var ScoreBoard = function(){
 // ScoreBoard CONSTANTS
 //------------------------
 
-ScoreBoard.X = 10;          // Score position
-ScoreBoard.Y = 40;          // y position below title
-ScoreBoard.LIFE_X = 250;    // to centre on screen based on 3 lives
-ScoreBoard.LIFE_Y = -4;     // to take account of blank space at top
-ScoreBoard.BLING_X = 390;   // x position of collected bling
-ScoreBoard.BLING_Y = -10;   // to take account of blank space at top
+ScoreBoard.prototype.X = 10;          // Score position
+ScoreBoard.prototype.Y = 40;          // y position below title
+ScoreBoard.prototype.LIFE_X = 250;    // to centre on screen based on 3 lives
+ScoreBoard.prototype.LIFE_Y = -4;     // to take account of blank space at top
+ScoreBoard.prototype.BLING_X = 390;   // x position of collected bling
+ScoreBoard.prototype.BLING_Y = -10;   // to take account of blank space at top
 
 
 //------------------------
@@ -1063,15 +1068,15 @@ ScoreBoard.BLING_Y = -10;   // to take account of blank space at top
 //------------------------
 
 ScoreBoard.prototype.initial = function () {
-  this.x = ScoreBoard.X;
-  this.y = ScoreBoard.Y;
-  this.lifeX = ScoreBoard.LIFE_X;
-  this.lifeY = ScoreBoard.LIFE_Y;
-  this.blingX = ScoreBoard.BLING_X;
-  this.blingY = ScoreBoard.BLING_Y;
+  this.x = this.X;
+  this.y = this.Y;
+  this.lifeX = this.LIFE_X;
+  this.lifeY = this.LIFE_Y;
+  this.blingX = this.BLING_X;
+  this.blingY = this.BLING_Y;
   this.score = 0;
   this.sprite = 'images/Heart.png';
-  this.collectible = Game.DEFAULT_COLLECTIBLE;
+  this.collectible = game.DEFAULT_COLLECTIBLE;
   this.collection = 0;
 };
 
@@ -1109,7 +1114,8 @@ ScoreBoard.prototype.render = function () {
 //************************
 
 var game = new Game();
-var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
+// var allEnemies = [new Enemy(), new Enemy(), new Enemy()];
+var allEnemies = [];
 var player = new Player();
 var scoreBoard = new ScoreBoard();
 var gameInfo = new GameInfo();
@@ -1117,7 +1123,8 @@ var gameOverScreen = new GameOverScreen();
 var gameWonScreen = new GameWonScreen();
 var gamePausedScreen = new GamePausedScreen();
 var gameLevelUpScreen = new GameLevelUpScreen();
-var bling = [new Bling(), new Bling()];
+// var bling = [new Bling(), new Bling()];
+var bling = [];
 var dropZone = new DropZone();
 
 
